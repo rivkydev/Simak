@@ -38,6 +38,7 @@ Route::get('/pelayanan/{layanan}', [PelayananController::class, 'detail']);
 
 Route::middleware(['auth:pegawai', 'role:1'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::post('/pegawai/surat/{id}/verifikasi', [LurahController::class, 'verifikasiSurat'])->name('pegawai.verifikasiSurat');
     Route::get('/admin/profil/{id_kelurahan}', [AdminController::class, 'profil'])->name('admin.profil');
     Route::post('admin/profil/{id_kelurahan}/update-deskripsi', [AdminController::class, 'updateDeskripsi'])->name('admin.profil.updateDeskripsi');
     Route::post('admin/profil/{id_kelurahan}/update-visi', [AdminController::class, 'updateVisi'])->name('admin.profil.updateVisi');
@@ -56,8 +57,16 @@ Route::middleware(['auth:pegawai', 'role:1'])->group(function () {
     Route::post('/admin/profil/{id_potensi}/update-jenis', [AdminController::class, 'updatePotensiJenis'])->name('admin.potensi.updateJenis');
     Route::delete('/admin/profil/{id_potensi}/hapus-jenis', [AdminController::class, 'hapusPotensiJenis'])->name('admin.potensi.hapusJenis');
 
+    // --- BAGIAN PELAYANAN SURAT (DIPERBAIKI) ---
     Route::get('/admin/pelayanan', [AdminController::class, 'pelayanan'])->name('admin.pelayanan');
-    Route::get('/admin/pelayanan/{layanan}', [AdminController::class, 'detail']);
+    
+    // Route untuk MENAMPILKAN form (GET)
+    Route::get('/admin/pelayanan/{layanan}', [AdminController::class, 'detail'])->name('admin.pelayanan.detail');
+    
+    // Route untuk MEMPROSES form (POST) - Menangani semua jenis surat
+    Route::post('/admin/pelayanan/{layanan}', [AdminController::class, 'cetakSurat'])->name('admin.pelayanan.cetak');
+    // -------------------------------------------
+
     Route::get('/admin/umkm', [AdminController::class, 'umkm'])->name('admin.umkm');
     Route::get('/admin/tambahkanUmkm', [AdminController::class, 'create'])->name('umkm.create');
     Route::post('/admin/store', [AdminController::class, 'store'])->name('umkm.store');
