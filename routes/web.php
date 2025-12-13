@@ -68,5 +68,7 @@ Route::middleware(['auth:pegawai', 'role:1'])->group(function () {
 
 Route::middleware(['auth:pegawai', 'role:2,3'])->group(function () {
     Route::get('/pegawai/dashboard', [LurahController::class, 'index'])->name('pegawai.dashboard');
+    Route::get('/pegawai/pengaturan-bobot', [LurahController::class, 'pengaturanBobot'])->name('pegawai.pengaturanBobot');
+    Route::post('/pegawai/update-bobot', [LurahController::class, 'updateBobot'])->name('pegawai.updateBobot');
     Route::get('/pegawai/umkm', [LurahController::class, 'umkm'])->name('pegawai.umkm');
 });
