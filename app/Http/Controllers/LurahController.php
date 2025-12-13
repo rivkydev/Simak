@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Surat;
+// Pastikan nama model sesuai dengan file Anda (Case Sensitive)
+use App\Models\Surat; 
 use App\Models\InformasiUmkm;
 use App\Models\Kriteria;
 use App\Models\JenisSuratSetting;
@@ -14,16 +15,14 @@ class LurahController extends Controller
 {
     public function index(Request $request)
     {
-        // --- 1. OTENTIKASI ---
+        // 1. OTENTIKASI & DATA PEGAWAI
         $pegawai = Auth::guard('pegawai')->user();
         if (!$pegawai->relationLoaded('kelurahan')) {
             $pegawai->load('kelurahan');
         }
         $idKelurahan = $pegawai->id_kelurahan;
 
-        // --- 2. STATISTIK (Chart Data Real-time dari Database) ---
-        
-        // A. Statistik Kartu
+        // 2. STATISTIK (Header Dashboard)
         $jumlahDisetujui = Surat::where('id_kelurahan', $idKelurahan)->where('status_verifikasi', 'diterima')->count();
         $jumlahMenunggu = Surat::where('id_kelurahan', $idKelurahan)->where(function($q){
             $q->whereNull('status_verifikasi')->orWhere('status_verifikasi', 'menunggu');
@@ -36,11 +35,11 @@ class LurahController extends Controller
             ['label' => 'Jumlah UMKM', 'value' => $jumlahUMKM, 'icon' => 'UMKM.png'],
         ];
 
-        // B. Data Grafik Tren Surat Masuk (Per Bulan di Tahun Ini) [REQUEST 1]
-        $dataPerBulan = array_fill(1, 12, 0); // Siapkan array bulan 1-12 dengan nilai 0
-
+        // 3. CHART DATA
+        // A. Grafik Tren Bulanan
+        $dataPerBulan = array_fill(1, 12, 0); 
         $suratDb = Surat::where('id_kelurahan', $idKelurahan)
-            ->whereYear('created_at', date('Y')) // Filter tahun sekarang
+            ->whereYear('created_at', date('Y'))
             ->selectRaw('MONTH(created_at) as bulan, COUNT(*) as total')
             ->groupBy('bulan')
             ->pluck('total', 'bulan');
@@ -51,24 +50,24 @@ class LurahController extends Controller
 
         $chartData = [
             'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
-            'values' => array_values($dataPerBulan), // Data Asli dari DB
+            'values' => array_values($dataPerBulan),
         ];
 
-        // C. Data Grafik Status (Donat)
+        // B. Grafik Status
         $statusData = [
             'Menunggu' => $jumlahMenunggu,
             'Disetujui' => $jumlahDisetujui,
             'Ditolak' => Surat::where('id_kelurahan', $idKelurahan)->where('status_verifikasi', 'ditolak')->count(),
         ];
 
-        // --- 3. QUERY DATA TABEL ---
+        // 4. QUERY UTAMA SURAT (Tabel)
         $query = Surat::where('id_kelurahan', $idKelurahan)
             ->where(function($q) {
                 $q->whereNull('status_verifikasi')
                   ->orWhere('status_verifikasi', 'menunggu');
             });
 
-        // Filter Search
+        // Filter Pencarian
         if ($request->has('search') && $request->search != '') {
             $query->where('nama_pemohon', 'LIKE', "%{$request->search}%");
         }
@@ -76,11 +75,10 @@ class LurahController extends Controller
             $query->where('jenis_surat', $request->jenis_surat);
         }
 
-        // --- 4. LOGIKA WSM ---
+        // 5. LOGIKA WSM (Weighted Scoring Model)
         $gunakanWSM = $request->has('filter_wsm') && $request->filter_wsm == '1';
 
         if ($gunakanWSM) {
-            // Ambil Bobot & Settingan
             $k_waktu   = Kriteria::where('id_kelurahan', $idKelurahan)->where('atribut', 'lama_menunggu')->first();
             $k_urgensi = Kriteria::where('id_kelurahan', $idKelurahan)->where('atribut', 'urgensi')->first();
             $k_status  = Kriteria::where('id_kelurahan', $idKelurahan)->where('atribut', 'status_surat')->first();
@@ -121,24 +119,30 @@ class LurahController extends Controller
         ]);
     }
 
-    // --- FITUR BARU: VERIFIKASI SURAT (TERIMA/TOLAK) [REQUEST 2] ---
+    // --- FITUR VERIFIKASI SURAT ---
     public function verifikasiSurat(Request $request, $id)
     {
+        // Validasi input dari form
         $request->validate([
             'status' => 'required|in:diterima,ditolak'
         ]);
 
         $surat = Surat::findOrFail($id);
         
-        // Update status
+        // Update data surat
         $surat->status_verifikasi = $request->status;
+        
+        // Opsional: Simpan data verifikator jika kolom tersedia di DB
+        // $surat->verificator_id = Auth::guard('pegawai')->id();
+        // $surat->tanggal_verifikasi = now();
+
         $surat->save();
 
         $pesan = $request->status == 'diterima' ? 'Surat berhasil disetujui.' : 'Surat telah ditolak.';
         return back()->with('success', $pesan);
     }
 
-    // Method lain (umkm, pengaturanBobot, updateBobot) tetap sama...
+    // --- PENGATURAN BOBOT ---
     public function pengaturanBobot()
     {
         $pegawai = Auth::guard('pegawai')->user();
@@ -163,5 +167,7 @@ class LurahController extends Controller
         return back()->with('success', 'Pengaturan prioritas berhasil diperbarui!');
     }
 
-    public function umkm() { return view('lurah.umkm'); }
+    public function umkm() { 
+        return view('lurah.umkm'); 
+    }
 }

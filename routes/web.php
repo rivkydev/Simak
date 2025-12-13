@@ -10,7 +10,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LurahController;
 
-// Halaman login dan otentikasi
+// --- PUBLIC ROUTES (Akses Tanpa Login) ---
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::get('/forgot-password', [LoginController::class, 'showForgotForm'])->name('password.request');
@@ -20,25 +20,26 @@ Route::post('/reset-password', [LoginController::class, 'resetPassword'])->name(
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::get('/about', [AboutController::class, 'index'])->name('about');
-
-// Halaman beranda
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// Halaman daftar kelurahan
+// Halaman Kelurahan & UMKM Public
 Route::get('/kelurahan', [KelurahanController::class, 'index'])->name('kelurahan.index');
 Route::get('/kelurahan/{nama}', [KelurahanController::class, 'show'])->name('kelurahan.show');
-
-// Halaman informasi UMKM per kelurahan
 Route::get('/umkm', [UMKMKelurahanController::class, 'index'])->name('umkm.kelurahan');
 Route::get('/umkm/{slug}', [UMKMKelurahanController::class, 'show'])->name('umkm.show');
 
-// Halaman Pelayanan
+// Halaman Pelayanan Public
 Route::get('/pelayanan', [PelayananController::class, 'index'])->name('pelayanan.index');
 Route::get('/pelayanan/{layanan}', [PelayananController::class, 'detail']);
 
+
+// =================================================================
+// GROUP 1: ADMIN / OPERATOR (ROLE: 1)
+// =================================================================
 Route::middleware(['auth:pegawai', 'role:1'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-    Route::post('/pegawai/surat/{id}/verifikasi', [LurahController::class, 'verifikasiSurat'])->name('pegawai.verifikasiSurat');
+
+    // Profil Kelurahan
     Route::get('/admin/profil/{id_kelurahan}', [AdminController::class, 'profil'])->name('admin.profil');
     Route::post('admin/profil/{id_kelurahan}/update-deskripsi', [AdminController::class, 'updateDeskripsi'])->name('admin.profil.updateDeskripsi');
     Route::post('admin/profil/{id_kelurahan}/update-visi', [AdminController::class, 'updateVisi'])->name('admin.profil.updateVisi');
@@ -52,21 +53,18 @@ Route::middleware(['auth:pegawai', 'role:1'])->group(function () {
     Route::delete('/admin/profil/foto/{id_foto}', [AdminController::class, 'deleteFoto'])->name('admin.profil.deleteFoto');
     Route::post('/admin/profil/maps/{kelurahan}', [AdminController::class, 'updateMaps'])->name('admin.profil.updateMaps');
     
+    // Potensi
     Route::post('/admin/profil/{id_kelurahan}/update-deskripsi-potensi', [AdminController::class, 'updatePotensiDeskripsi'])->name('admin.potensi.updateDeskripsi');
     Route::post('/admin/profil/{id_kelurahan}/tambah-jenis', [AdminController::class, 'tambahPotensiJenis'])->name('admin.potensi.tambahJenis');
     Route::post('/admin/profil/{id_potensi}/update-jenis', [AdminController::class, 'updatePotensiJenis'])->name('admin.potensi.updateJenis');
     Route::delete('/admin/profil/{id_potensi}/hapus-jenis', [AdminController::class, 'hapusPotensiJenis'])->name('admin.potensi.hapusJenis');
 
-    // --- BAGIAN PELAYANAN SURAT (DIPERBAIKI) ---
+    // Pelayanan Surat (Sisi Admin)
     Route::get('/admin/pelayanan', [AdminController::class, 'pelayanan'])->name('admin.pelayanan');
-    
-    // Route untuk MENAMPILKAN form (GET)
     Route::get('/admin/pelayanan/{layanan}', [AdminController::class, 'detail'])->name('admin.pelayanan.detail');
-    
-    // Route untuk MEMPROSES form (POST) - Menangani semua jenis surat
     Route::post('/admin/pelayanan/{layanan}', [AdminController::class, 'cetakSurat'])->name('admin.pelayanan.cetak');
-    // -------------------------------------------
 
+    // Manajemen UMKM (Sisi Admin)
     Route::get('/admin/umkm', [AdminController::class, 'umkm'])->name('admin.umkm');
     Route::get('/admin/tambahkanUmkm', [AdminController::class, 'create'])->name('umkm.create');
     Route::post('/admin/store', [AdminController::class, 'store'])->name('umkm.store');
@@ -75,9 +73,19 @@ Route::middleware(['auth:pegawai', 'role:1'])->group(function () {
     Route::delete('/umkm/{id_umkm}', [AdminController::class, 'destroy'])->name('umkm.destroy');
 });
 
+
+// =================================================================
+// GROUP 2: LURAH (ROLE: 2) & SEKLUR (ROLE: 3)
+// =================================================================
 Route::middleware(['auth:pegawai', 'role:2,3'])->group(function () {
     Route::get('/pegawai/dashboard', [LurahController::class, 'index'])->name('pegawai.dashboard');
+    
+    // [FIX] Route Verifikasi dipindahkan ke sini agar Lurah & Seklur bisa akses
+    Route::post('/pegawai/surat/{id}/verifikasi', [LurahController::class, 'verifikasiSurat'])->name('pegawai.verifikasiSurat');
+    
+    // Pengaturan Bobot WSM
     Route::get('/pegawai/pengaturan-bobot', [LurahController::class, 'pengaturanBobot'])->name('pegawai.pengaturanBobot');
     Route::post('/pegawai/update-bobot', [LurahController::class, 'updateBobot'])->name('pegawai.updateBobot');
+    
     Route::get('/pegawai/umkm', [LurahController::class, 'umkm'])->name('pegawai.umkm');
 });
