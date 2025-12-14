@@ -17,40 +17,84 @@ use App\Models\StrukturPemerintah;
 use App\Models\InformasiKontak;
 use App\Models\FotoKegiatan;
 use App\Models\SosialMedia;
-use App\Models\Surat; // Pastikan Model Surat di-import
+use App\Models\Surat; 
+use Carbon\Carbon; // Tambahkan ini untuk pengelolaan tanggal
 
 class AdminController extends Controller
 {
     public function dashboard()
     {
+        // 1. Ambil Data Pegawai (Admin) yang Login & ID Kelurahannya
+        $pegawai = Auth::guard('pegawai')->user();
+        
+        // Pastikan relasi kelurahan ter-load jika dibutuhkan di view
+        if (!$pegawai->relationLoaded('kelurahan')) {
+            $pegawai->load('kelurahan');
+        }
+        $idKelurahan = $pegawai->id_kelurahan;
+
+        // 2. Query Statistik (Real Count dari Database)
+        // Hitung surat disetujui
+        $jumlahDisetujui = Surat::where('id_kelurahan', $idKelurahan)
+                            ->where('status_verifikasi', 'diterima') // Sesuaikan value di DB (diterima/1)
+                            ->count();
+
+        // Hitung surat menunggu (status null atau 'menunggu')
+        $jumlahMenunggu = Surat::where('id_kelurahan', $idKelurahan)
+                            ->where(function($q) {
+                                $q->whereNull('status_verifikasi')
+                                  ->orWhere('status_verifikasi', 'menunggu');
+                            })->count();
+
+        // Hitung jumlah UMKM
+        $jumlahUMKM = InformasiUmkm::where('id_kelurahan', $idKelurahan)->count();
+        
+        // Hitung surat ditolak (untuk grafik donat)
+        $jumlahDitolak = Surat::where('id_kelurahan', $idKelurahan)
+                            ->where('status_verifikasi', 'ditolak')
+                            ->count();
+
+        // Susun Array Statistik
         $statistik = [
-            ['label' => 'Surat Disetujui', 'value' => 6, 'icon'  => 'suratDisetujui.png'],
-            ['label' => 'Surat Menunggu', 'value' => 3, 'icon'  => 'suratMenunggu.png'],
-            ['label' => 'Jumlah UMKM', 'value' => 15, 'icon'  => 'UMKM.png'],
+            ['label' => 'Surat Disetujui', 'value' => $jumlahDisetujui, 'icon'  => 'suratDisetujui.png'],
+            ['label' => 'Surat Menunggu', 'value' => $jumlahMenunggu, 'icon'  => 'suratMenunggu.png'],
+            ['label' => 'Jumlah UMKM', 'value' => $jumlahUMKM, 'icon'  => 'UMKM.png'],
         ];
 
-        // Contoh data dummy (bisa diganti query real jika tabel surat sudah ada data)
-        $suratMasuk = [
-            ['nama' => 'Ahmad Syarif', 'tanggal' => '2025-08-01', 'status' => 'Menunggu'],
-            ['nama' => 'Nur Aini', 'tanggal' => '2025-08-03', 'status' => 'Disetujui'],
-            ['nama' => 'Rizky Maulana', 'tanggal' => '2025-08-05', 'status' => 'Ditolak'],
+        // 3. Query Tabel Surat Masuk (Ambil 5 Terbaru)
+        $suratMasuk = Surat::where('id_kelurahan', $idKelurahan)
+                        ->latest() // Urutkan dari yang terbaru
+                        ->take(5)  // Batasi 5 data saja untuk dashboard
+                        ->get();
+
+        // 4. Data untuk Grafik Status (Donat/Pie Chart)
+        $statusData = [
+            'Menunggu'  => $jumlahMenunggu, 
+            'Disetujui' => $jumlahDisetujui, 
+            'Ditolak'   => $jumlahDitolak
         ];
 
-        $statusData = ['Menunggu' => 3, 'Disetujui' => 6, 'Ditolak' => 1];
+        // 5. Data untuk Grafik Tren Bulanan (Tahun Ini)
+        $dataPerBulan = array_fill(1, 12, 0); // Siapkan array bulan 1-12 isi 0
+        
+        $suratPerBulan = Surat::where('id_kelurahan', $idKelurahan)
+            ->whereYear('created_at', date('Y')) // Filter tahun sekarang
+            ->selectRaw('MONTH(created_at) as bulan, COUNT(*) as total')
+            ->groupBy('bulan')
+            ->pluck('total', 'bulan'); // Ambil hasil sebagai array [bulan => total]
+
+        // Masukkan data DB ke array bulan (agar bulan kosong tetap ada nilainya 0)
+        foreach ($suratPerBulan as $bulan => $total) {
+            $dataPerBulan[$bulan] = $total;
+        }
+
         $chartData = [
             'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
-            'values' => [2, 4, 3, 5, 6, 3, 4, 5, 2, 4, 3, 5],
+            'values' => array_values($dataPerBulan), // Reset index array agar urut 0-11 untuk ChartJS
         ];
 
-        $pegawai = Auth::guard('pegawai')->user()->load('kelurahan');
-
-        return view('admin.dashboard', [
-            'pegawai' => $pegawai,
-            'statistik' => $statistik,
-            'suratMasuk' => $suratMasuk,
-            'statusData' => $statusData,
-            'chartData' => $chartData,
-        ]);
+        // Kirim semua data ke View
+        return view('admin.dashboard', compact('statistik', 'suratMasuk', 'statusData', 'chartData'));
     }
 
     public function profil($id_kelurahan)
