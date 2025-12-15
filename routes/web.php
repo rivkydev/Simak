@@ -82,7 +82,8 @@ Route::middleware(['auth:pegawai', 'role:2,3'])->group(function () {
     
     // [FIX] Route Verifikasi dipindahkan ke sini agar Lurah & Seklur bisa akses
     Route::post('/pegawai/surat/{id}/verifikasi', [LurahController::class, 'verifikasiSurat'])->name('pegawai.verifikasiSurat');
-    
+    // Di dalam group middleware role:2,3
+    Route::get('/pegawai/surat/{id}/preview', [LurahController::class, 'previewSurat'])->name('pegawai.surat.preview');
     // Pengaturan Bobot WSM
     Route::get('/pegawai/pengaturan-bobot', [LurahController::class, 'pengaturanBobot'])->name('pegawai.pengaturanBobot');
     Route::post('/pegawai/update-bobot', [LurahController::class, 'updateBobot'])->name('pegawai.updateBobot');
