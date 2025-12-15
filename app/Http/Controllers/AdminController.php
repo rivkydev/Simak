@@ -63,8 +63,8 @@ class AdminController extends Controller
 
         // 3. Query Tabel Surat Masuk (Ambil 5 Terbaru)
         $suratMasuk = Surat::where('id_kelurahan', $idKelurahan)
-                        ->latest() // Urutkan dari yang terbaru
-                        ->take(5)  // Batasi 5 data saja untuk dashboard
+                        // ->latest() // Urutkan dari yang terbaru
+                        // ->take(5)  // Batasi 5 data saja untuk dashboard
                         ->get();
 
         // 4. Data untuk Grafik Status (Donat/Pie Chart)
@@ -90,11 +90,11 @@ class AdminController extends Controller
 
         $chartData = [
             'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
-            'values' => array_values($dataPerBulan), // Reset index array agar urut 0-11 untuk ChartJS
+            'values' => array_values($dataPerBulan), 
         ];
 
         // Kirim semua data ke View
-        return view('admin.dashboard', compact('statistik', 'suratMasuk', 'statusData', 'chartData'));
+        return view('admin.dashboard', compact('statistik', 'suratMasuk', 'statusData', 'chartData', 'pegawai'));
     }
 
     public function profil($id_kelurahan)
@@ -347,8 +347,11 @@ class AdminController extends Controller
             'nama_pemohon' => $request->nama,
             'nama_surat'   => $judulSurat,
             'jenis_surat'  => $judulSurat,
-            'status_verifikasi' => 'diterima', // Admin langsung diterima
-            'file_surat' => null, // Nanti diisi jika ada PDF
+            
+            // UBAH DISINI: Dari 'diterima' menjadi 'menunggu'
+            'status_verifikasi' => null, 
+            
+            'file_surat' => null,
         ]);
 
         return redirect()->route('admin.pelayanan')->with('success', "Berhasil membuat $judulSurat untuk " . $request->nama);

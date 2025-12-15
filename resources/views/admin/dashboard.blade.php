@@ -10,7 +10,8 @@
     </h1>
 
     @php
-        $namaKelurahan = $pegawai->kelurahan->nama ?? '-';
+        // Menggunakan optional() untuk menghindari error jika relasi kosong
+        $namaKelurahan = optional($pegawai->kelurahan)->nama ?? '-';
     @endphp
 
     <p class="text-lg text-gray-600 mb-8">Kelurahan
@@ -54,27 +55,37 @@
                 </tr>
             </thead>
             <tbody class="text-gray-800">
-                @foreach ($suratMasuk as $index => $row)
+                @forelse ($suratMasuk as $index => $row)
                     <tr class="{{ $index % 2 === 0 ? 'bg-white' : 'bg-gray-100' }}">
                         <td class="py-3 px-4">{{ $index + 1 }}</td>
-                        <td class="py-3 px-4">{{ $row['nama'] }}</td>
-                        <td class="py-3 px-4">{{ $row['tanggal'] }}</td>
+                        
+                        <td class="py-3 px-4">{{ $row->nama_pemohon }}</td>
+                        
+                        <td class="py-3 px-4">{{ $row->created_at->format('d M Y') }}</td>
+                        
                         <td class="py-3 px-4 font-medium">
-                            @if ($row['status'] === 'Menunggu')
-                                <span class="text-yellow-500">Menunggu</span>
-                            @elseif ($row['status'] === 'Disetujui')
-                                <span class="text-green-600">Disetujui</span>
-                            @elseif ($row['status'] === 'Ditolak')
-                                <span class="text-red-600">Ditolak</span>
+                            @if ($row->status_verifikasi === 'menunggu' || $row->status_verifikasi === null)
+                                <span class="text-yellow-500 font-bold">Menunggu</span>
+                            @elseif ($row->status_verifikasi === 'diterima')
+                                <span class="text-green-600 font-bold">Disetujui</span>
+                            @elseif ($row->status_verifikasi === 'ditolak')
+                                <span class="text-red-600 font-bold">Ditolak</span>
                             @endif
                         </td>
+                        
                         <td class="py-3 px-4 space-x-2 flex justify-center items-center">
                             <button class="text-[#0A142F] hover:text-blue-900">
                                 <span class="material-symbols-outlined">folder_eye</span>
                             </button>
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="5" class="py-4 text-center text-gray-500">
+                            Belum ada data surat masuk.
+                        </td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
@@ -86,6 +97,7 @@
         const pieCtx = document.getElementById('statusPieChart');
         const lineCtx = document.getElementById('suratLineChart');
 
+        // Data dikirim dari Controller sebagai JSON
         const statusData = @json($statusData);
         const chartData = @json($chartData);
 
@@ -93,7 +105,7 @@
             labels: Object.keys(statusData),
             datasets: [{
                 data: Object.values(statusData),
-                backgroundColor: ['#FACC15', '#22C55E', '#EF4444'],
+                backgroundColor: ['#FACC15', '#22C55E', '#EF4444'], // Kuning, Hijau, Merah
                 borderWidth: 1
             }]
         };
@@ -124,6 +136,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', renderCharts);
+    // Tambahan jika menggunakan library HTMX / Livewire agar chart reload
     document.body.addEventListener('htmx:afterSettle', renderCharts);
 </script>
 @endsection

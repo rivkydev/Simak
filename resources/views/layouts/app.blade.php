@@ -28,6 +28,30 @@
         @include('components.footer')
     @endif
 
-</body>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <script>
+        // Cek apakah ada session "success" dari Controller
+        @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: "{{ session('success') }}",
+                showConfirmButton: false,
+                timer: 2000 // Pop up akan hilang otomatis dalam 2 detik
+            });
+        @endif
+
+        // Cek apakah ada session "error" (Opsional, untuk jaga-jaga)
+        @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: "{{ session('error') }}",
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Tutup'
+            });
+        @endif
+    </script>
+</body>
 </html>
