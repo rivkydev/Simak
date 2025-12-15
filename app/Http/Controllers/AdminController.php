@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Kelurahan;
 use App\Models\Profil;
 use App\Models\Sejarah;
@@ -329,108 +330,117 @@ class AdminController extends Controller
 
     // [METODE BARU] MENANGANI SEMUA JENIS SURAT
     public function cetakSurat(Request $request, $layanan)
-    {
-        // 1. Validasi Input (General)
-        // Pastikan input 'nama' dan 'nomor_surat' selalu ada di semua form blade Anda
-        $request->validate([
-            'nama' => 'required|string|max:255',
-            'nomor_surat' => 'required|string|max:255',
-        ]);
+{
+    // 1. Validasi Input Dasar
+    $request->validate([
+        'nomor_surat' => 'required|string|max:255',
+    ]);
 
-        // 2. Format Nama Surat secara otomatis dari URL parameter
-        // Contoh: 'domisili_usaha' -> 'Surat Keterangan Domisili Usaha'
-        $judulSurat = 'Surat Keterangan ' . ucwords(str_replace(['_', '-'], ' ', $layanan));
+    $pegawai = Auth::guard('pegawai')->user();
+    $kelurahan = $pegawai->kelurahan;
 
-        // 3. Simpan Data ke Database
+    // 2. Format Nama Surat
+    $judulSurat = 'Surat Keterangan ' . ucwords(str_replace(['_', '-'], ' ', $layanan));
+
+    // 3. Data Dasar untuk PDF
+    $dataPDF = [
+        'kelurahan' => $kelurahan,
+        'nomor_surat' => $request->nomor_surat,
+        'tanggal' => now()->locale('id')->translatedFormat('d F Y'),
+        'alamat_kelurahan' => $this->getAlamatKelurahan($kelurahan->id_kelurahan),
+        'nama_lurah' => $this->getNamaLurah($kelurahan->id_kelurahan),
+        'nip_lurah' => $this->getNIPLurah($kelurahan->id_kelurahan),
+    ];
+
+    $namaPemohon = '';
+    $template = '';
+
+    // 4. Validasi & Data Spesifik Per Jenis Surat
+    switch ($layanan) {
+        case 'domisili-usaha':
+        case 'domisili_usaha':
+            $request->validate([
+                'nama_perusahaan' => 'required|string|max:255',
+                'penanggung_jawab' => 'required|string|max:255',
+                'alamat_perusahaan' => 'required|string',
+            ]);
+            
+            $dataPDF = array_merge($dataPDF, [
+                'nama_perusahaan' => $request->nama_perusahaan,
+                'penanggung_jawab' => $request->penanggung_jawab,
+                'alamat_perusahaan' => $request->alamat_perusahaan,
+            ]);
+            
+            $namaPemohon = $request->penanggung_jawab;
+            $template = 'surat.domisili_usaha_pdf';
+            break;
+
+        // Tambahkan case untuk surat lain di sini
+        default:
+            return back()->withErrors(['error' => 'Template surat belum tersedia untuk jenis: ' . $layanan]);
+    }
+
+    try {
+        // 5. Generate PDF
+        $pdf = PDF::loadView($template, $dataPDF);
+        $pdf->setPaper('A4', 'portrait');
+
+        // 6. Simpan PDF ke Storage
+        $namaFile = 'surat_' . str_replace([' ', '-'], '_', strtolower($layanan)) . '_' . time() . '.pdf';
+        $pathFile = 'surat/' . $namaFile;
+        Storage::put('public/' . $pathFile, $pdf->output());
+
+        // 7. Simpan ke Database dengan data_surat sebagai JSON
+        $dataSurat = json_encode($request->except(['_token', 'nomor_surat']));
+        
         Surat::create([
-            'id_kelurahan' => Auth::user()->id_kelurahan,
-            'nama_pemohon' => $request->nama,
-            'nama_surat'   => $judulSurat,
-            'jenis_surat'  => $judulSurat,
-            
-            // UBAH DISINI: Dari 'diterima' menjadi 'menunggu'
-            'status_verifikasi' => null, 
-            
-            'file_surat' => null,
+            'id_kelurahan' => $kelurahan->id_kelurahan,
+            'nama_pemohon' => $namaPemohon,
+            'nama_surat' => $judulSurat,
+            'jenis_surat' => $judulSurat,
+            'status_verifikasi' => null,
+            'file_surat' => $pathFile,
+            'data_surat' => $dataSurat,
         ]);
 
-        return redirect()->route('admin.pelayanan')->with('success', "Berhasil membuat $judulSurat untuk " . $request->nama);
+        // 8. Download PDF
+        return $pdf->download($namaFile);
+
+    } catch (\Exception $e) {
+        return back()->withErrors(['error' => 'Gagal membuat PDF: ' . $e->getMessage()]);
     }
+}
 
-    // --- BAGIAN UMKM ---
+// Helper Methods
+private function getAlamatKelurahan($id_kelurahan)
+{
+    $kontak = DB::table('informasi_kontak')
+        ->where('id_kelurahan', $id_kelurahan)
+        ->where('jenis_kontak', 'Alamat')
+        ->first();
+    
+    return $kontak ? $kontak->informasi_kontak : 'Jl. Bau Massepe No.151, Bacukiki Barat, Parepare';
+}
 
-    public function umkm()
-    {
-        $pegawai = auth()->user();
-        $umkm = InformasiUMKM::where('id_kelurahan', $pegawai->id_kelurahan)->get();
-        return view('admin.umkm', compact('umkm'));
-    }
+private function getNamaLurah($id_kelurahan)
+{
+    $lurah = DB::table('pegawai')
+        ->where('id_kelurahan', $id_kelurahan)
+        ->where('id_jabatan', 3) // ID Jabatan Lurah
+        ->first();
+    
+    return $lurah ? $lurah->nama : '[Nama Lurah]';
+}
 
-    public function create()
-    {
-        return view('admin.creatUmkm');
-    }
-
-    public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'nama' => 'required|string|max:255',
-            'tahun' => 'nullable|string|max:4',
-            'deskripsi' => 'required|string',
-            'nib' => 'nullable|string|max:255',
-            'alamat' => 'required|string|max:255',
-            'instagram' => 'nullable|string|max:255',
-            'grab' => 'nullable|string|max:255',
-            'facebook' => 'nullable|string|max:255',
-            'tiktok' => 'nullable|string|max:255',
-            'telp' => 'nullable|string|max:20',
-            'jenis_usaha' => 'required|string|max:255',
-            'foto_usaha' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
-        ]);
-
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
-        }
-
-        $pegawai = Pegawai::where('id_kelurahan', Auth::id())->first();
-        if (!$pegawai) {
-            // Fallback: Jika Auth ID cocok langsung dengan id_kelurahan (sistem login simpel)
-            $id_kelurahan = Auth::user()->id_kelurahan;
-        } else {
-            $id_kelurahan = $pegawai->id_kelurahan;
-        }
-
-        $gambarPath = null;
-        if ($request->hasFile('foto_usaha')) {
-            try {
-                $file = $request->file('foto_usaha');
-                $filename = $request->nama . '.' . $file->getClientOriginalExtension();
-                $file->storeAs('public/foto_usaha', $filename);
-                $gambarPath = 'foto_usaha/' . $filename;
-            } catch (\Exception $e) {
-                return back()->withErrors(['foto_usaha' => 'Gagal mengunggah foto usaha.'])->withInput();
-            }
-        }
-
-        InformasiUMKM::create([
-            'id_kelurahan' => $id_kelurahan,
-            'nib' => $request->nib,
-            'nama' => $request->nama,
-            'alamat' => $request->alamat,
-            'deskripsi' => $request->deskripsi,
-            'email' => $request->email,
-            'telp' => $request->telp,
-            'gambar' => $gambarPath,
-            'instagram' => $request->instagram,
-            'grab' => $request->grab,
-            'facebook' => $request->facebook,
-            'tiktok' => $request->tiktok,
-            'jenis_usaha' => $request->jenis_usaha,
-            'tahun' => $request->tahun_berdiri
-        ]);
-
-        return redirect()->route('umkm.create')->with('success', 'Data UMKM berhasil ditambahkan.');
-    }
+private function getNIPLurah($id_kelurahan)
+{
+    $lurah = DB::table('pegawai')
+        ->where('id_kelurahan', $id_kelurahan)
+        ->where('id_jabatan', 3)
+        ->first();
+    
+    return $lurah ? $lurah->nip : '-';
+}
 
     public function edit($id)
     {
@@ -486,4 +496,6 @@ class AdminController extends Controller
         $umkm->delete();
         return redirect()->route('admin.umkm')->with('success', 'Data UMKM berhasil dihapus');
     }
+
+
 }

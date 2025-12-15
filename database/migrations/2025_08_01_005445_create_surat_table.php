@@ -12,7 +12,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('id_kelurahan');
             $table->string('nama_pemohon');
             $table->string('nama_surat');
-            $table->string('file_surat')->nullable();
+            $table->string('file_surat')->nullable();  // ✅ SUDAH NULLABLE
             $table->string('jenis_surat');
             $table->enum('status_verifikasi', ['diterima', 'ditolak'])->nullable();
             $table->timestamps();

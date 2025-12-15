@@ -114,6 +114,7 @@
     </div>
 
     {{-- TABEL DATA --}}
+    {{-- TABEL DATA --}}
     <div id="tableContainer" class="overflow-x-auto rounded-xl shadow border border-gray-200 bg-white min-h-[300px]">
         <table class="min-w-full text-sm text-center">
             <thead class="bg-[#0A142F] text-white">
@@ -130,7 +131,7 @@
                 @forelse ($suratMasuk as $index => $row)
                     <tr class="hover:bg-blue-50 transition duration-150 ease-in-out {{ (isset($gunakanWSM) && $gunakanWSM && $loop->first) ? 'bg-yellow-50' : '' }}">
                         <td class="py-3 px-4">{{ $loop->iteration }}</td>
-                        
+                       
                         {{-- Nama Pemohon + Badge WSM --}}
                         <td class="py-3 px-4 text-left font-bold text-gray-700">
                             {{ $row->nama_pemohon }}
@@ -138,16 +139,14 @@
                                 <span class="ml-2 text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-full shadow-sm blink-animation">PRIORITAS #1</span>
                             @endif
                         </td>
-
                         <td class="py-3 px-4 text-left text-xs">{{ $row->jenis_surat }}</td>
-                        
+                       
                         <td class="py-3 px-4">
                             {{ \Carbon\Carbon::parse($row->created_at)->translatedFormat('d M Y') }}
                             <div class="text-[10px] text-gray-400">
                                 {{ \Carbon\Carbon::parse($row->created_at)->diffForHumans() }}
                             </div>
                         </td>
-
                         <td class="py-3 px-4">
                             @if ($row->status_verifikasi === null || $row->status_verifikasi === 'menunggu')
                                 <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold shadow-sm animate-pulse">Menunggu</span>
@@ -157,9 +156,19 @@
                                 <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold shadow-sm">Ditolak</span>
                             @endif
                         </td>
-
                         {{-- TOMBOL AKSI BERFUNGSI (FORM) --}}
                         <td class="py-3 px-4 flex justify-center items-center space-x-2">
+                            {{-- Tombol Lihat PDF --}}
+                            @if($row->file_surat)
+                                <a href="{{ asset('storage/' . $row->file_surat) }}" target="_blank" class="bg-blue-500 text-white px-3 py-1.5 rounded text-xs hover:bg-blue-600 shadow-sm transition transform hover:scale-105 font-bold">
+                                    Lihat PDF
+                                </a>
+                            @else
+                                <button disabled class="bg-blue-300 text-white px-3 py-1.5 rounded text-xs cursor-not-allowed shadow-sm font-bold">
+                                    Lihat PDF
+                                </button>
+                            @endif
+
                             @if($row->status_verifikasi === null || $row->status_verifikasi === 'menunggu')
                                 {{-- Form Terima --}}
                                 <form action="{{ route('pegawai.verifikasiSurat', $row->id_surat) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENERIMA surat ini?');">
@@ -169,7 +178,6 @@
                                         Terima
                                     </button>
                                 </form>
-
                                 {{-- Form Tolak --}}
                                 <form action="{{ route('pegawai.verifikasiSurat', $row->id_surat) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENOLAK surat ini?');">
                                     @csrf
