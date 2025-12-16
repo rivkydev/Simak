@@ -346,6 +346,7 @@ class AdminController extends Controller
     $dataPDF = [
         'kelurahan' => $kelurahan,
         'nomor_surat' => $request->nomor_surat,
+        'judul_surat' => $judulSurat,
         'tanggal' => now()->locale('id')->translatedFormat('d F Y'),
         'alamat_kelurahan' => $this->getAlamatKelurahan($kelurahan->id_kelurahan),
         'nama_lurah' => $this->getNamaLurah($kelurahan->id_kelurahan),
@@ -353,7 +354,7 @@ class AdminController extends Controller
     ];
 
     $namaPemohon = '';
-    $template = '';
+    $template = 'surat.template_pdf'; // Default template
 
     // 4. Validasi & Data Spesifik Per Jenis Surat
     switch ($layanan) {
@@ -372,12 +373,61 @@ class AdminController extends Controller
             ]);
             
             $namaPemohon = $request->penanggung_jawab;
-            $template = 'surat.domisili_usaha_pdf';
+            $template = 'surat.domisili_usaha_pdf'; // Template khusus
             break;
 
-        // Tambahkan case untuk surat lain di sini
+        case 'belum-menikah':
+        case 'belum_menikah':
+            $request->validate([
+                'nama' => 'required|string|max:255',
+            ]);
+            
+            $dataPDF = array_merge($dataPDF, $request->except(['_token', 'nomor_surat']));
+            $namaPemohon = $request->nama;
+            break;
+
+        case 'tempat-tinggal':
+        case 'tempat_tinggal':
+            $request->validate([
+                'nama' => 'required|string|max:255',
+            ]);
+            
+            $dataPDF = array_merge($dataPDF, $request->except(['_token', 'nomor_surat']));
+            $namaPemohon = $request->nama;
+            break;
+
+        case 'kematian':
+            $request->validate([
+                'nama' => 'required|string|max:255',
+                'nama_pelapor' => 'required|string|max:255',
+            ]);
+            
+            $dataPDF = array_merge($dataPDF, $request->except(['_token', 'nomor_surat']));
+            $namaPemohon = $request->nama_pelapor;
+            break;
+
+        case 'ahli-waris':
+        case 'ahli_waris':
+            $request->validate([
+                'nama' => 'required|string|max:255',
+            ]);
+            
+            $dataPDF = array_merge($dataPDF, $request->except(['_token', 'nomor_surat']));
+            $namaPemohon = $request->nama;
+            break;
+
+        case 'penghasilan-orang-tua':
+        case 'penghasilan_orang_tua':
+            $request->validate([
+                'nama' => 'required|string|max:255',
+            ]);
+            
+            $dataPDF = array_merge($dataPDF, $request->except(['_token', 'nomor_surat']));
+            $namaPemohon = $request->nama;
+            break;
+
         default:
-            return back()->withErrors(['error' => 'Template surat belum tersedia untuk jenis: ' . $layanan]);
+            return back()->withErrors(['error' => 'Jenis surat tidak dikenali: ' . $layanan]);
     }
 
     try {
@@ -390,7 +440,7 @@ class AdminController extends Controller
         $pathFile = 'surat/' . $namaFile;
         Storage::put('public/' . $pathFile, $pdf->output());
 
-        // 7. Simpan ke Database dengan data_surat sebagai JSON
+        // 7. Simpan ke Database
         $dataSurat = json_encode($request->except(['_token', 'nomor_surat']));
         
         Surat::create([

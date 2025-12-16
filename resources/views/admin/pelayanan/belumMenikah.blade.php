@@ -10,89 +10,114 @@
 
     <h1 class="text-2xl sm:text-3xl font-bold mb-8 shadow-sm">Surat Belum Menikah</h1>
 
-    <form action="#" method="POST" class="space-y-5 bg-white p-6 rounded-lg shadow-md">
-        @csrf
+    {{-- Update bagian form di belumMenikah.blade.php --}}
 
-        <div class="flex flex-col md:flex-row md:items-center gap-4">
-            <label class="md:w-1/3 text-sm font-medium">Nomor Surat</label>
-            <input type="text" name="nomor_surat" placeholder="Masukkan Nomor Urut Surat"
-                class="w-full md:w-2/3 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800" />
-        </div>
+<form action="{{ route('admin.pelayanan.cetak', 'belum-menikah') }}" method="POST" class="space-y-5 bg-white p-6 rounded-lg shadow-md">
+    @csrf
 
-        <div class="flex flex-col md:flex-row md:items-center gap-4">
-            <label class="md:w-1/3 text-sm font-medium">Nama</label>
-            <input type="text" name="nama" placeholder="Masukkan Nama Lengkap"
-                class="w-full md:w-2/3 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800" />
-        </div>
-        
-        <div class="flex flex-col md:flex-row md:items-center gap-4">
-            <label class="md:w-1/3 text-sm font-medium">NIK</label>
-            <input type="text" name="nik" placeholder="Masukkan NIK"
-                class="w-full md:w-2/3 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800" />
-        </div>
-
-        <div class="flex flex-col md:flex-row md:items-center gap-4">
-            <label class="md:w-1/3 text-sm font-medium">Tempat/Tgl Lahir</label>
-            <input type="text" name="ttl" placeholder="Masukkan Tempat/Tgl Lahir"
-                class="w-full md:w-2/3 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800" />
-        </div>
-
-        <div class="flex flex-col md:flex-row md:items-center gap-4">
-            <label class="md:w-1/3 text-sm font-medium">Jenis Kelamin</label>
-            <div class="flex gap-6 text-sm text-gray-800 w-full md:w-2/3">
-                <label class="inline-flex items-center"><input type="radio" name="jenis_kelamin" value="Laki-Laki" class="mr-2">Laki-Laki</label>
-                <label class="inline-flex items-center"><input type="radio" name="jenis_kelamin" value="Perempuan" class="mr-2">Perempuan</label>
-            </div>
-        </div>
-
-        <div class="flex flex-col md:flex-row md:items-center gap-4">
-            <label class="md:w-1/3 text-sm font-medium">Agama</label>
-            <select name="agama"
-                class="w-full md:w-2/3 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800">
-                <option value="">Pilih Agama</option>
-                @foreach(['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'] as $agama)
-                    <option>{{ $agama }}</option>
+    @if($errors->any())
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <ul class="list-disc list-inside">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
                 @endforeach
-            </select>
+            </ul>
         </div>
+    @endif
 
-        <div class="flex flex-col md:flex-row md:items-center gap-4">
-            <label class="md:w-1/3 text-sm font-medium">Warga Negara</label>
-            <div class="flex gap-6 text-sm text-gray-800 w-full md:w-2/3">
-                <label><input type="radio" name="warga_negara" value="WNI" class="mr-2"> WNI</label>
-                <label><input type="radio" name="warga_negara" value="WNA" class="mr-2"> WNA</label>
-            </div>
-        </div>
+    <div class="flex flex-col md:flex-row md:items-center gap-4">
+        <label class="md:w-1/3 text-sm font-medium">Nomor Surat</label>
+        <input type="text" name="nomor_surat" placeholder="Masukkan Nomor Urut Surat" required
+            value="{{ old('nomor_surat') }}"
+            class="w-full md:w-2/3 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800" />
+    </div>
 
-        <div class="flex flex-col md:flex-row md:items-center gap-4">
-            <label class="md:w-1/3 text-sm font-medium">Pekerjaan</label>
-            <input type="text" name="pekerjaan" placeholder="Masukkan Pekerjaan"
-                class="w-full md:w-2/3 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800" />
-        </div>
+    <div class="flex flex-col md:flex-row md:items-center gap-4">
+        <label class="md:w-1/3 text-sm font-medium">Nama</label>
+        <input type="text" name="nama" placeholder="Masukkan Nama Lengkap" required
+            value="{{ old('nama') }}"
+            class="w-full md:w-2/3 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800" />
+    </div>
+    
+    <div class="flex flex-col md:flex-row md:items-center gap-4">
+        <label class="md:w-1/3 text-sm font-medium">NIK</label>
+        <input type="text" name="nik" placeholder="Masukkan NIK"
+            value="{{ old('nik') }}"
+            class="w-full md:w-2/3 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800" />
+    </div>
 
-        <div class="flex flex-col md:flex-row md:items-center gap-4">
-            <label class="md:w-1/3 text-sm font-medium">Alamat</label>
-            <input type="text" name="alamat" placeholder="Masukkan Alamat Lengkap"
-                class="w-full md:w-2/3 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800" />
-        </div>
+    <div class="flex flex-col md:flex-row md:items-center gap-4">
+        <label class="md:w-1/3 text-sm font-medium">Tempat/Tgl Lahir</label>
+        <input type="text" name="ttl" placeholder="Masukkan Tempat/Tgl Lahir"
+            value="{{ old('ttl') }}"
+            class="w-full md:w-2/3 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800" />
+    </div>
 
-        <div class="flex flex-col md:flex-row md:items-center gap-4">
-            <label class="md:w-1/3 text-sm font-medium">RT / RW</label>
-            <div class="flex gap-4 w-full md:w-2/3 items-center">
-                <input type="text" name="rt" placeholder="RT"
-                    class="w-20 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800" />
-                <span class="text-gray-500">/</span>
-                <input type="text" name="rw" placeholder="RW"
-                    class="w-20 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800" />
-            </div>
+    <div class="flex flex-col md:flex-row md:items-center gap-4">
+        <label class="md:w-1/3 text-sm font-medium">Jenis Kelamin</label>
+        <div class="flex gap-6 text-sm text-gray-800 w-full md:w-2/3">
+            <label class="inline-flex items-center">
+                <input type="radio" name="jenis_kelamin" value="Laki-Laki" class="mr-2" {{ old('jenis_kelamin') == 'Laki-Laki' ? 'checked' : '' }}>Laki-Laki
+            </label>
+            <label class="inline-flex items-center">
+                <input type="radio" name="jenis_kelamin" value="Perempuan" class="mr-2" {{ old('jenis_kelamin') == 'Perempuan' ? 'checked' : '' }}>Perempuan
+            </label>
         </div>
+    </div>
 
-        <div class="flex justify-end pt-6">
-            <button type="submit"
-                class="bg-[#0A142F] text-white px-6 py-2 rounded-lg hover:bg-[#1f2a48] transition text-sm">
-                Buat Surat
-            </button>
+    <div class="flex flex-col md:flex-row md:items-center gap-4">
+        <label class="md:w-1/3 text-sm font-medium">Agama</label>
+        <select name="agama"
+            class="w-full md:w-2/3 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800">
+            <option value="">Pilih Agama</option>
+            @foreach(['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'] as $agama)
+                <option value="{{ $agama }}" {{ old('agama') == $agama ? 'selected' : '' }}>{{ $agama }}</option>
+            @endforeach
+        </select>
+    </div>
+
+    <div class="flex flex-col md:flex-row md:items-center gap-4">
+        <label class="md:w-1/3 text-sm font-medium">Warga Negara</label>
+        <div class="flex gap-6 text-sm text-gray-800 w-full md:w-2/3">
+            <label><input type="radio" name="warga_negara" value="WNI" class="mr-2" {{ old('warga_negara') == 'WNI' ? 'checked' : '' }}> WNI</label>
+            <label><input type="radio" name="warga_negara" value="WNA" class="mr-2" {{ old('warga_negara') == 'WNA' ? 'checked' : '' }}> WNA</label>
         </div>
-    </form>
+    </div>
+
+    <div class="flex flex-col md:flex-row md:items-center gap-4">
+        <label class="md:w-1/3 text-sm font-medium">Pekerjaan</label>
+        <input type="text" name="pekerjaan" placeholder="Masukkan Pekerjaan"
+            value="{{ old('pekerjaan') }}"
+            class="w-full md:w-2/3 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800" />
+    </div>
+
+    <div class="flex flex-col md:flex-row md:items-center gap-4">
+        <label class="md:w-1/3 text-sm font-medium">Alamat</label>
+        <input type="text" name="alamat" placeholder="Masukkan Alamat Lengkap"
+            value="{{ old('alamat') }}"
+            class="w-full md:w-2/3 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800" />
+    </div>
+
+    <div class="flex flex-col md:flex-row md:items-center gap-4">
+        <label class="md:w-1/3 text-sm font-medium">RT / RW</label>
+        <div class="flex gap-4 w-full md:w-2/3 items-center">
+            <input type="text" name="rt" placeholder="RT"
+                value="{{ old('rt') }}"
+                class="w-20 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800" />
+            <span class="text-gray-500">/</span>
+            <input type="text" name="rw" placeholder="RW"
+                value="{{ old('rw') }}"
+                class="w-20 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-800" />
+        </div>
+    </div>
+
+    <div class="flex justify-end pt-6">
+        <button type="submit"
+            class="bg-[#0A142F] text-white px-6 py-2 rounded-lg hover:bg-[#1f2a48] transition text-sm flex items-center gap-2">
+            <span class="material-symbols-outlined">picture_as_pdf</span>
+            Generate & Download PDF
+        </button>
+    </div>
+</form>
 </div>
 @endsection
