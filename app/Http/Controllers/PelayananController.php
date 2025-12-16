@@ -9,12 +9,11 @@ class PelayananController extends Controller
     public function index()
     {
         $layanan = [
-            'Surat Keterangan Domisili Usaha',
-            'Surat Keterangan Kematian',
-            'Surat Keterangan Belum Menikah',
-            'Surat Keterangan Tempat Tinggal',
-            'Surat Keterangan Ahli Waris',
-            'Surat Keterangan Penghasilan Orang Tua',
+            'Surat Keterangan Domisili Usaha',      // a
+            'Surat Keterangan Belum Menikah',       // b
+            'Surat Keterangan Tempat Tinggal',      // c
+            'Surat Keterangan Domisili',            // d
+            'Surat Keterangan Penghasilan Orang Tua', // e
         ];
 
         return view('pelayanan', compact('layanan'));
