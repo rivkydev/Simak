@@ -258,7 +258,7 @@ class PegawaiSeeder extends Seeder
                 'id_kelurahan' => 10,
                 'id_jabatan' => 1, // pelayan
                 'nama' => 'Pegawai Pelayan',
-                'nip' => '10024',
+                'nip' => '123456',
                 'password' => Hash::make('password1'),
                 'created_at' => now(),
                 'updated_at' => now(),

@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
             InformasiUmkmSeeder::class,
             JabatanSeeder::class,
             PegawaiSeeder::class,
+            KriteriaSeeder::class,
+            JenisSuratSeeder::class,
         ]);
 
 
