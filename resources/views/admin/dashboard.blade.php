@@ -51,7 +51,6 @@
                     <th class="py-3 px-4">NAMA PEMOHON</th>
                     <th class="py-3 px-4">TANGGAL DIKIRIM</th>
                     <th class="py-3 px-4">STATUS</th>
-                    <th class="py-3 px-4 rounded-tr-xl">AKSI</th>
                 </tr>
             </thead>
             <tbody class="text-gray-800">
@@ -73,10 +72,7 @@
                             @endif
                         </td>
                         
-                        <td class="py-3 px-4 space-x-2 flex justify-center items-center">
-                            <button class="text-[#0A142F] hover:text-blue-900">
-                                <span class="material-symbols-outlined">folder_eye</span>
-                            </button>
+                        
                         </td>
                     </tr>
                 @empty
