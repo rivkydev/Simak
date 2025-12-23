@@ -128,78 +128,74 @@
                 </tr>
             </thead>
             <tbody id="tableBody" class="text-gray-800 divide-y divide-gray-100">
-                @forelse ($suratMasuk as $index => $row)
-                    <tr class="hover:bg-blue-50 transition duration-150 ease-in-out {{ (isset($gunakanWSM) && $gunakanWSM && $loop->first) ? 'bg-yellow-50' : '' }}">
-                        <td class="py-3 px-4">{{ $loop->iteration }}</td>
-                       
-                        {{-- Nama Pemohon + Badge WSM --}}
-                        <td class="py-3 px-4 text-left font-bold text-gray-700">
-                            {{ $row->nama_pemohon }}
-                            @if(isset($gunakanWSM) && $gunakanWSM && $loop->first)
-                                <span class="ml-2 text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-full shadow-sm blink-animation">PRIORITAS #1</span>
-                            @endif
-                        </td>
-                        <td class="py-3 px-4 text-left text-xs">{{ $row->jenis_surat }}</td>
-                       
-                        <td class="py-3 px-4">
-                            {{ \Carbon\Carbon::parse($row->created_at)->translatedFormat('d M Y') }}
-                            <div class="text-[10px] text-gray-400">
-                                {{ \Carbon\Carbon::parse($row->created_at)->diffForHumans() }}
-                            </div>
-                        </td>
-                        <td class="py-3 px-4">
-                            @if ($row->status_verifikasi === null || $row->status_verifikasi === 'menunggu')
-                                <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold shadow-sm animate-pulse">Menunggu</span>
-                            @elseif ($row->status_verifikasi === 'diterima')
-                                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold shadow-sm">Disetujui</span>
-                            @elseif ($row->status_verifikasi === 'ditolak')
-                                <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold shadow-sm">Ditolak</span>
-                            @endif
-                        </td>
-                        {{-- TOMBOL AKSI BERFUNGSI (FORM) --}}
-                        <td class="py-3 px-4 flex justify-center items-center space-x-2">
-                            {{-- Tombol Lihat PDF --}}
-                            @if($row->file_surat)
-                                <a href="{{ asset('storage/' . $row->file_surat) }}" target="_blank" class="bg-blue-500 text-white px-3 py-1.5 rounded text-xs hover:bg-blue-600 shadow-sm transition transform hover:scale-105 font-bold">
-                                    Lihat PDF
-                                </a>
-                            @else
-                                <button disabled class="bg-blue-300 text-white px-3 py-1.5 rounded text-xs cursor-not-allowed shadow-sm font-bold">
-                                    Lihat PDF
-                                </button>
-                            @endif
+    @forelse ($suratMasuk as $index => $row)
+        @php
+            $isSelesai = in_array($row->status_verifikasi, ['diterima', 'ditolak']);
+            $isPriority = (isset($gunakanWSM) && $gunakanWSM && $loop->first && !$isSelesai);
+        @endphp
+        
+        <tr class="hover:bg-blue-50 transition duration-150 ease-in-out 
+            {{ $isPriority ? 'bg-yellow-50' : '' }} 
+            {{ $isSelesai ? 'bg-gray-50/50 opacity-75' : '' }}">
+            
+            <td class="py-3 px-4 {{ $isSelesai ? 'text-gray-400' : '' }}">{{ $loop->iteration }}</td>
+           
+            <td class="py-3 px-4 text-left font-bold {{ $isSelesai ? 'text-gray-500' : 'text-gray-700' }}">
+                {{ $row->nama_pemohon }}
+                @if($isPriority)
+                    <span class="ml-2 text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-full shadow-sm blink-animation">PRIORITAS #1</span>
+                @endif
+            </td>
+            
+            <td class="py-3 px-4 text-left text-xs {{ $isSelesai ? 'text-gray-400' : '' }}">{{ $row->jenis_surat }}</td>
+           
+            <td class="py-3 px-4 {{ $isSelesai ? 'text-gray-400' : '' }}">
+                {{ \Carbon\Carbon::parse($row->created_at)->translatedFormat('d M Y') }}
+                <div class="text-[10px] text-gray-400">
+                    {{ \Carbon\Carbon::parse($row->created_at)->diffForHumans() }}
+                </div>
+            </td>
 
-                            @if($row->status_verifikasi === null || $row->status_verifikasi === 'menunggu')
-                                {{-- Form Terima --}}
-                                <form action="{{ route('pegawai.verifikasiSurat', $row->id_surat) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENERIMA surat ini?');">
-                                    @csrf
-                                    <input type="hidden" name="status" value="diterima">
-                                    <button type="submit" class="bg-green-500 text-white px-3 py-1.5 rounded text-xs hover:bg-green-600 shadow-sm transition transform hover:scale-105 font-bold">
-                                        Terima
-                                    </button>
-                                </form>
-                                {{-- Form Tolak --}}
-                                <form action="{{ route('pegawai.verifikasiSurat', $row->id_surat) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENOLAK surat ini?');">
-                                    @csrf
-                                    <input type="hidden" name="status" value="ditolak">
-                                    <button type="submit" class="bg-red-500 text-white px-3 py-1.5 rounded text-xs hover:bg-red-600 shadow-sm transition transform hover:scale-105 font-bold">
-                                        Tolak
-                                    </button>
-                                </form>
-                            @else
-                                <span class="text-gray-400 text-xs italic">Selesai</span>
-                            @endif
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="py-10 text-center text-gray-500">
-                            <img src="{{ asset('assets/bingung.png') }}" class="w-16 h-16 mx-auto mb-2 opacity-50 grayscale">
-                            <p>Data surat tidak ditemukan.</p>
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
+            <td class="py-3 px-4">
+                @if ($row->status_verifikasi === null || $row->status_verifikasi === 'menunggu')
+                    <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold shadow-sm animate-pulse">Menunggu</span>
+                @elseif ($row->status_verifikasi === 'diterima')
+                    <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold shadow-sm">Disetujui</span>
+                @elseif ($row->status_verifikasi === 'ditolak')
+                    <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold shadow-sm">Ditolak</span>
+                @endif
+            </td>
+
+            <td class="py-3 px-4 flex justify-center items-center space-x-2">
+                {{-- Tombol PDF Selalu Aktif jika file ada --}}
+                @if($row->file_surat)
+                    <a href="{{ asset('storage/' . $row->file_surat) }}" target="_blank" class="bg-blue-500 text-white px-3 py-1.5 rounded text-xs hover:bg-blue-600 shadow-sm transition font-bold">
+                        PDF
+                    </a>
+                @endif
+
+                @if(!$isSelesai)
+                    {{-- Form Terima --}}
+                    <form action="{{ route('pegawai.verifikasiSurat', $row->id_surat) }}" method="POST" onsubmit="return confirm('Terima surat ini?');">
+                        @csrf
+                        <input type="hidden" name="status" value="diterima">
+                        <button type="submit" class="bg-green-500 text-white px-3 py-1.5 rounded text-xs hover:bg-green-600 shadow-sm font-bold">Terima</button>
+                    </form>
+                    {{-- Form Tolak --}}
+                    <form action="{{ route('pegawai.verifikasiSurat', $row->id_surat) }}" method="POST" onsubmit="return confirm('Tolak surat ini?');">
+                        @csrf
+                        <input type="hidden" name="status" value="ditolak">
+                        <button type="submit" class="bg-red-500 text-white px-3 py-1.5 rounded text-xs hover:bg-red-600 shadow-sm font-bold">Tolak</button>
+                    </form>
+                @else
+                    <span class="text-gray-400 text-xs italic bg-gray-100 px-2 py-1 rounded border border-gray-200">Sudah Diproses</span>
+                @endif
+            </td>
+        </tr>
+    @empty
+        {{-- Row Empty Tetap Sama --}}
+    @endforelse
+</tbody>
         </table>
     </div>
 </div>
