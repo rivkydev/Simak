@@ -383,7 +383,7 @@ class AdminController extends Controller
             
             $dataPDF = array_merge($dataPDF, $request->except(['_token', 'nomor_surat']));
             $namaPemohon = $request->nama;
-            $template = 'surat.template_pdf';
+            $template = 'surat.belum_menikah_pdf';
             break;
 
         case 'tempat-tinggal':

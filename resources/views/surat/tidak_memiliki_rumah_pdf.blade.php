@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Surat Keterangan Tidak Memiliki Rumah</title>
+    <title>Surat Keterangan Belum Memiliki Rumah</title>
     <style>
         @page {
             margin: 2cm 2cm 2cm 2cm;
@@ -11,7 +11,7 @@
         body {
             font-family: 'Times New Roman', Times, serif;
             font-size: 12pt;
-            line-height: 1.6;
+            line-height: 1.5;
         }
 
         .kop-surat {
@@ -26,7 +26,7 @@
         }
 
         .kop-surat td.logo {
-            width: 100px;
+            width: 80px;
             vertical-align: middle;
         }
 
@@ -36,7 +36,7 @@
         }
 
         .kop-surat img {
-            width: 80px;
+            width: 70px;
             height: auto;
         }
 
@@ -61,7 +61,7 @@
 
         .judul-surat {
             text-align: center;
-            margin: 30px 0 20px 0;
+            margin: 20px 0 5px 0;
         }
 
         .judul-surat h2 {
@@ -74,28 +74,28 @@
 
         .nomor-surat {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             font-size: 11pt;
         }
 
         .isi-surat {
             text-align: justify;
-            margin-bottom: 30px;
         }
 
         .isi-surat table {
             margin-left: 50px;
-            margin-top: 15px;
+            margin-top: 10px;
             margin-bottom: 15px;
+            width: 100%;
         }
 
         .isi-surat table td {
-            padding: 3px 0;
+            padding: 2px 0;
             vertical-align: top;
         }
 
         .isi-surat table td:first-child {
-            width: 200px;
+            width: 160px;
         }
 
         .isi-surat table td:nth-child(2) {
@@ -104,19 +104,40 @@
         }
 
         .ttd {
-            margin-top: 50px;
+            margin-top: 40px;
             margin-left: 60%;
+            text-align: left;
         }
 
         .ttd .nama-ttd {
-            margin-top: 80px;
+            margin-top: 70px;
             text-decoration: underline;
             font-weight: bold;
+            margin-bottom: 0;
         }
 
         .ttd .nip {
-            font-size: 10pt;
+            margin-top: 0;
+            font-size: 11pt;
         }
+
+        .isi-surat table {
+    /* Gunakan 60px untuk 1x Tab atau 100px-120px untuk 2x Tab */
+    margin-left: 120px; 
+    margin-top: 10px;
+    margin-bottom: 15px;
+    width: auto; /* Ubah ke auto agar tabel tidak melebar ke kanan secara paksa */
+}
+
+.isi-surat table td {
+    padding: 2px 0;
+    vertical-align: top;
+}
+
+/* Sesuaikan lebar kolom label agar titik dua (:) sejajar rapi */
+.isi-surat table td:first-child {
+    width: 140px; 
+}
     </style>
 </head>
 <body>
@@ -139,7 +160,7 @@
 
     {{-- JUDUL SURAT --}}
     <div class="judul-surat">
-        <h2>Surat Keterangan Tidak Memiliki Rumah</h2>
+        <h2>Surat Keterangan Belum Memiliki Rumah</h2>
     </div>
 
     {{-- NOMOR SURAT --}}
@@ -148,10 +169,27 @@
     </div>
 
     {{-- ISI SURAT --}}
+    {{-- ISI SURAT --}}
     <div class="isi-surat">
-        <p style="text-indent: 50px;">
-            Yang bertanda tangan di bawah ini Lurah {{ $kelurahan->nama }}, Kecamatan {{ $kelurahan->kecamatan }}, 
-            Kota Parepare, dengan ini menerangkan bahwa:
+        <p style="text-indent: 50px; margin-bottom: 5px;">
+            Yang bertanda tangan dibawah ini:
+        </p>
+
+        <table>
+            <tr>
+                <td>Nama</td>
+                <td>:</td>
+                <td><strong>{{ $nama_lurah }}</strong></td>
+            </tr>
+            <tr>
+                <td>Jabatan</td>
+                <td>:</td>
+                <td>Lurah {{ $kelurahan->nama }}</td>
+            </tr>
+        </table>
+
+        <p style="text-indent: 50px; margin-bottom: 5px;">
+            Dengan ini menerangkan bahwa :
         </p>
 
         <table>
@@ -161,12 +199,7 @@
                 <td><strong>{{ $nama }}</strong></td>
             </tr>
             <tr>
-                <td>NIK</td>
-                <td>:</td>
-                <td>{{ $nik ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td>Tempat/Tanggal Lahir</td>
+                <td>Tempat/Tgl Lahir</td>
                 <td>:</td>
                 <td>{{ $ttl ?? '-' }}</td>
             </tr>
@@ -181,39 +214,29 @@
                 <td>{{ $agama ?? '-' }}</td>
             </tr>
             <tr>
-                <td>Kewarganegaraan</td>
-                <td>:</td>
-                <td>{{ $warga_negara ?? '-' }}</td>
-            </tr>
-            <tr>
                 <td>Pekerjaan</td>
                 <td>:</td>
                 <td>{{ $pekerjaan ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>Kewarganegaraan</td>
+                <td>:</td>
+                <td>{{ $warga_negara ?? '-' }}</td>
             </tr>
             <tr>
                 <td>Alamat</td>
                 <td>:</td>
                 <td>{{ $alamat ?? '-' }}</td>
             </tr>
-            @if(isset($rt) && isset($rw))
-            <tr>
-                <td>RT/RW</td>
-                <td>:</td>
-                <td>{{ $rt }}/{{ $rw }}</td>
-            </tr>
-            @endif
         </table>
 
         <p style="text-indent: 50px;">
-            Adalah benar warga kami yang berdomisili di Kelurahan {{ $kelurahan->nama }}, 
-            Kecamatan {{ $kelurahan->kecamatan }}, Kota Parepare, dan yang bersangkutan sampai saat ini 
-            <strong>TIDAK MEMILIKI RUMAH/TEMPAT TINGGAL</strong> sendiri baik di wilayah Kelurahan {{ $kelurahan->nama }} 
-            maupun di wilayah lainnya.
+            Berdasarkan Surat Pernyataan yang bersangkutan dengan melampirkan Surat Pengantar Ketua RT/RW, 
+            Selanjutnya diterangkan bahwa yang bersangkutan benar belum memiliki rumah.
         </p>
 
         <p style="text-indent: 50px;">
-            Surat keterangan ini dibuat berdasarkan keterangan yang dapat dipertanggungjawabkan kebenarannya 
-            untuk dapat dipergunakan sebagaimana mestinya.
+            Demikian Surat Keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya.
         </p>
     </div>
 
@@ -221,8 +244,8 @@
     <div class="ttd">
         <p>Parepare, {{ $tanggal }}</p>
         <p>LURAH {{ strtoupper($kelurahan->nama) }}</p>
-        <p class="nama-ttd">{{ $nama_lurah }}</p>
-        <p class="nip">NIP. {{ $nip_lurah }}</p>
+        <div class="nama-ttd">{{ $nama_lurah }}</div>
+        <div class="nip">NIP. {{ $nip_lurah }}</div>
     </div>
 </body>
 </html>
