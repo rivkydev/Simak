@@ -6,6 +6,28 @@
 <div class="max-w-7xl mx-auto px-4 py-10">
     <h1 class="text-3xl font-bold mb-6">Pelayanan Persuratan</h1>
 
+    {{-- ALERT SUCCESS --}}
+    @if(session('success'))
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-3 shadow-sm" role="alert">
+        <span class="material-symbols-outlined text-green-600">check_circle</span>
+        <div>
+            <strong class="font-bold">Berhasil!</strong>
+            <span class="block sm:inline">{{ session('success') }}</span>
+        </div>
+    </div>
+    @endif
+
+    {{-- ALERT ERROR --}}
+    @if(session('error'))
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-3 shadow-sm" role="alert">
+        <span class="material-symbols-outlined text-red-600">error</span>
+        <div>
+            <strong class="font-bold">Gagal!</strong>
+            <span class="block sm:inline">{{ session('error') }}</span>
+        </div>
+    </div>
+    @endif
+
     <div class="mb-6">
         <input type="text" id="searchInput" placeholder="Cari jenis surat..." 
                class="w-full border rounded-lg px-4 py-2" />

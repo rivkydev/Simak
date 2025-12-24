@@ -56,8 +56,7 @@
     <div class="flex justify-end pt-4">
         <button type="submit"
             class="bg-[#0A142F] text-white px-6 py-3 rounded-md hover:bg-blue-900 transition flex items-center gap-2">
-            <span class="material-symbols-outlined">picture_as_pdf</span>
-            Generate & Download PDF
+            Buat Surat
         </button>
     </div>
 </form>

@@ -310,16 +310,16 @@ class AdminController extends Controller
     // --- BAGIAN PELAYANAN SURAT ---
 
     public function pelayanan()
-    {
-        $layanan = [
-            'Surat Keterangan Domisili Usaha',      // a
-            'Surat Keterangan Belum Menikah',       // b
-            'Surat Keterangan Tempat Tinggal',      // c
-            'Surat Keterangan Domisili',            // d
-            'Surat Keterangan Penghasilan Orang Tua', // e
-        ];
-        return view('admin.pelayanan', compact('layanan'));
-    }
+{
+    $layanan = [
+        'Surat Keterangan Domisili Usaha',
+        'Surat Keterangan Kematian',               
+        'Surat Keterangan Ahli Waris',           
+        'Surat Keterangan Belum Menikah',
+        'Surat Keterangan Tidak Memiliki Rumah',   
+    ];
+    return view('admin.pelayanan', compact('layanan'));
+}
 
     public function detail($layanan)
     {
@@ -372,7 +372,7 @@ class AdminController extends Controller
             ]);
             
             $namaPemohon = $request->penanggung_jawab;
-            $template = 'surat.domisili_usaha_pdf'; // Template khusus
+            $template = 'surat.domisili_usaha_pdf';
             break;
 
         case 'belum-menikah':
@@ -383,16 +383,26 @@ class AdminController extends Controller
             
             $dataPDF = array_merge($dataPDF, $request->except(['_token', 'nomor_surat']));
             $namaPemohon = $request->nama;
+            $template = 'surat.template_pdf';
             break;
 
         case 'tempat-tinggal':
         case 'tempat_tinggal':
+        case 'tidak-memiliki-rumah':
+        case 'tidak_memiliki_rumah':
             $request->validate([
                 'nama' => 'required|string|max:255',
             ]);
             
             $dataPDF = array_merge($dataPDF, $request->except(['_token', 'nomor_surat']));
             $namaPemohon = $request->nama;
+            
+            // Gunakan template khusus untuk tidak memiliki rumah
+            if (str_contains($layanan, 'tidak-memiliki-rumah') || str_contains($layanan, 'tidak_memiliki_rumah')) {
+                $template = 'surat.tidak_memiliki_rumah_pdf';
+            } else {
+                $template = 'surat.template_pdf';
+            }
             break;
 
         case 'kematian':
@@ -403,16 +413,35 @@ class AdminController extends Controller
             
             $dataPDF = array_merge($dataPDF, $request->except(['_token', 'nomor_surat']));
             $namaPemohon = $request->nama_pelapor;
+            $template = 'surat.kematian_pdf';
             break;
 
         case 'ahli-waris':
         case 'ahli_waris':
             $request->validate([
-                'nama' => 'required|string|max:255',
+                'nama_pewaris' => 'required|string|max:255',
             ]);
             
-            $dataPDF = array_merge($dataPDF, $request->except(['_token', 'nomor_surat']));
-            $namaPemohon = $request->nama;
+            // Khusus untuk ahli waris, handle array daftar ahli waris
+            $daftarAhliWaris = [];
+            if ($request->has('ahli_waris_nama') && is_array($request->ahli_waris_nama)) {
+                foreach ($request->ahli_waris_nama as $index => $nama) {
+                    if (!empty($nama)) {
+                        $daftarAhliWaris[] = [
+                            'nama' => $nama,
+                            'nik' => $request->ahli_waris_nik[$index] ?? '',
+                            'hubungan' => $request->ahli_waris_hubungan[$index] ?? '',
+                            'ttl' => $request->ahli_waris_ttl[$index] ?? '',
+                            'alamat' => $request->ahli_waris_alamat[$index] ?? '',
+                        ];
+                    }
+                }
+            }
+            
+            $dataPDF = array_merge($dataPDF, $request->except(['_token', 'nomor_surat', 'ahli_waris_nama', 'ahli_waris_nik', 'ahli_waris_hubungan', 'ahli_waris_ttl', 'ahli_waris_alamat']));
+            $dataPDF['daftar_ahli_waris'] = $daftarAhliWaris;
+            $namaPemohon = $request->nama_pewaris;
+            $template = 'surat.ahli_waris_pdf';
             break;
 
         case 'penghasilan-orang-tua':
@@ -423,6 +452,7 @@ class AdminController extends Controller
             
             $dataPDF = array_merge($dataPDF, $request->except(['_token', 'nomor_surat']));
             $namaPemohon = $request->nama;
+            $template = 'surat.template_pdf';
             break;
 
         default:
@@ -453,10 +483,11 @@ class AdminController extends Controller
         ]);
 
         // 8. Download PDF
-        return $pdf->download($namaFile);
+        return redirect()->route('admin.pelayanan')
+            ->with('success', 'Surat berhasil dibuat! Surat akan dikirim ke dashboard Lurah untuk diverifikasi.');
 
     } catch (\Exception $e) {
-        return back()->withErrors(['error' => 'Gagal membuat PDF: ' . $e->getMessage()]);
+        return back()->withErrors(['error' => 'Terjadi error: ' . $e->getMessage()]);
     }
 }
 
