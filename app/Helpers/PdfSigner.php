@@ -2,17 +2,17 @@
 
 namespace App\Helpers;
 
-use setasign\Fpdi\TcpdfFpdi; // Pastikan library terinstal
+use setasign\Fpdi\TcpdfFpdi; 
 
 class PdfSigner
 {
-    public static function addSignature($pdfPath, $signaturePath, $nama, $nip)
+    // Tambahkan parameter $customX dan $customY dengan default null
+    public static function addSignature($pdfPath, $signaturePath, $nama, $nip, $customX = null, $customY = null)
     {
         $pdf = new TcpdfFpdi();
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
 
-        // Import halaman dari PDF original
         $pageCount = $pdf->setSourceFile($pdfPath);
         for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
             $templateId = $pdf->importPage($pageNo);
@@ -20,27 +20,27 @@ class PdfSigner
             $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
             $pdf->useTemplate($templateId);
 
-            // Hanya tambahkan gambar signature di halaman terakhir, di atas nama
-           if ($pageNo === $pageCount && $signaturePath && file_exists($signaturePath)) {
-        $w = $size['width'];
-        $h = $size['height'];
+            if ($pageNo === $pageCount && $signaturePath && file_exists($signaturePath)) {
+                $w = $size['width']; // Lebar kertas (biasanya 210mm untuk A4)
+                $h = $size['height']; // Tinggi kertas (biasanya 297mm untuk A4)
 
-        // UNTUK LEBIH KE KANAN:
-        // Sebelumnya mungkin menggunakan $w - 60 atau $w * 0.6.
-        // Ubah menjadi pengurang yang lebih kecil atau persentase yang lebih besar.
-        $x = $w - 55; // Mengurangi nilai pengurang akan menggeser gambar ke kanan
+                // LOGIKA BARU:
+                // Jika custom coordinate diisi dari Controller, gunakan itu.
+                // Jika tidak, gunakan default lama ($w - 55, dll).
+                if ($customX !== null && $customY !== null) {
+                    $x = $customX;
+                    $y = $customY;
+                } else {
+                    // Default lama (fallback)
+                    $x = $w - 55; 
+                    $y = $h - 85; 
+                }
 
-        // UNTUK AGAK NAIK KE ATAS:
-        // Sebelumnya menggunakan $h - 70.
-        // Ubah menjadi pengurang yang lebih besar untuk menarik koordinat Y ke atas.
-        $y = $h - 85; // Menambah nilai pengurang akan menarik gambar lebih tinggi dari bawah kertas
-
-        // Ukuran lebar gambar signature (misal: 45mm)
-        $pdf->Image($signaturePath, $x, $y, 45, 0, 'PNG', '', '', false, 300, '', false, false, 0);
-    }
+                // Simpan gambar
+                $pdf->Image($signaturePath, $x, $y, 80, 0, 'PNG', '', '', false, 300, '', false, false, 0);
+            }
         }
 
-        // Simpan PDF signed baru sebagai temporary
         $signedPath = storage_path('app/public/' . basename($pdfPath) . '_signed.pdf');
         $pdf->Output($signedPath, 'F');
 

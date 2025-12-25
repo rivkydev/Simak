@@ -140,29 +140,46 @@ class LurahController extends Controller
     
     // Jika disetujui, tambahkan tanda tangan ke PDF
     if ($request->status === 'diterima' && $surat->file_surat) {
-    try {
-        $originalPdfPath = storage_path('app/public/' . $surat->file_surat);
-        $signaturePath = public_path('signatures/bahrul_signature.png'); // Path gambar signature
-        
-        // Panggil PdfSigner (hanya tambah gambar)
-        $signedPdfPath = PdfSigner::addSignature($originalPdfPath, $signaturePath, $pegawai->nama, $pegawai->nip ?? '-');
-        
-        // Backup PDF unsigned (optional)
-        $backupPath = str_replace('.pdf', '_unsigned.pdf', $surat->file_surat);
-        Storage::copy('public/' . $surat->file_surat, 'public/' . $backupPath);
-        
-        // Replace dengan signed
-        Storage::put('public/' . $surat->file_surat, file_get_contents($signedPdfPath));
-        
-        // Hapus temp
-        if (file_exists($signedPdfPath)) {
-            unlink($signedPdfPath);
+        try {
+            $originalPdfPath = storage_path('app/public/' . $surat->file_surat);
+            $signaturePath = public_path('signatures/bahrul_signature.png');
+            
+            // --- PENGATURAN POSISI TANDA TANGAN (EDIT DI SINI) ---
+            // Gunakan satuan milimeter (mm). Kertas A4 lebarnya 210mm, tingginya 297mm.
+            
+            // X = Jarak dari sisi KIRI kertas. 
+            // Semakin besar angka, semakin ke KANAN.
+            // Contoh: 140 itu agak ke kanan.
+            $posisiX = 123; 
+
+            // Y = Jarak dari sisi ATAS kertas.
+            // Semakin besar angka, semakin ke BAWAH.
+            // Semakin kecil angka, semakin ke ATAS (naik).
+            // Contoh: 200 itu agak bawah.
+            $posisiY = 210; 
+
+            // Panggil PdfSigner dengan koordinat baru
+            $signedPdfPath = PdfSigner::addSignature(
+                $originalPdfPath, 
+                $signaturePath, 
+                $pegawai->nama, 
+                $pegawai->nip ?? '-',
+                $posisiX, // Masukkan X
+                $posisiY  // Masukkan Y
+            );
+            
+            // Backup dan Replace file (kode lama Anda tetap sama)
+            $backupPath = str_replace('.pdf', '_unsigned.pdf', $surat->file_surat);
+            Storage::copy('public/' . $surat->file_surat, 'public/' . $backupPath);
+            Storage::put('public/' . $surat->file_surat, file_get_contents($signedPdfPath));
+            
+            if (file_exists($signedPdfPath)) {
+                unlink($signedPdfPath);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to add signature: ' . $e->getMessage());
         }
-    } catch (\Exception $e) {
-        \Log::error('Failed to add signature: ' . $e->getMessage());
-        // Lanjutkan verifikasi meski gagal tambah signature
     }
-}
     
     $surat->save();
 

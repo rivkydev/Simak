@@ -4,114 +4,99 @@
     <meta charset="utf-8">
     <title>Surat Keterangan Ahli Waris</title>
     <style>
-    /* --- STYLE UNTUK PREVIEW DI BROWSER --- */
-    @media screen {
+        @page { margin: 0; }
         body {
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            padding: 40px 0;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
             margin: 0;
+            padding: 0;
         }
-
         .container {
-            background-color: white;
-            width: 21cm;
-            min-height: 29.7cm;
-            padding: 2cm;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-            box-sizing: border-box;
+            width: 700px;
+            margin: 40px auto;
+            padding: 0 40px;
         }
-    }
+        
+        /* KOP SURAT */
+        .kop-table {
+            width: 100%;
+            border-bottom: 3px double #000;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+        .logo-cell { width: 80px; text-align: left; vertical-align: middle; }
+        .text-cell { text-align: center; vertical-align: middle; }
+        .text-cell h3 { margin: 0; font-size: 16pt; text-transform: uppercase; }
+        .text-cell h4 { margin: 0; font-size: 14pt; text-transform: uppercase; }
+        .text-cell p { margin: 0; font-size: 10pt; }
 
-    /* --- STYLE STANDAR UNTUK PDF --- */
-    @page {
-        margin: 2cm;
-    }
+        /* JUDUL */
+        .judul-area { text-align: center; margin-bottom: 25px; }
+        .judul-area h2 {
+            text-decoration: underline; font-size: 14pt; margin: 0;
+            text-transform: uppercase; font-weight: bold;
+        }
 
-    body {
-        font-family: 'Times New Roman', Times, serif;
-        font-size: 12pt;
-        line-height: 1.6;
-        color: black;
-    }
+        /* ISI */
+        .isi-text { text-align: justify; line-height: 1.5; margin-bottom: 10px; }
+        .data-table { width: 100%; margin: 10px 0 15px 40px; }
+        .data-table td { vertical-align: top; padding: 2px 0; }
 
-    .kop-surat {
-        border-bottom: 3px solid #000;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-    }
+        /* --- TANDA TANGAN --- */
+        .ttd-table {
+            width: 100%;
+            margin-top: 175px;
+        }
 
-    .kop-surat table {
-        width: 100%;
-        border-collapse: collapse;
-    }
+        .ttd-cell {
+            width: 60%; /* Kolom kosong sebelah kiri */
+        }
 
-    /* Ukuran logo dikembalikan ke standar awal Anda yang sudah sesuai */
-    .kop-surat td.logo {
-        width: 100px;
-        vertical-align: middle;
-    }
+        .sign-cell {
+            width: 40%;
+            text-align: center;
+        }
 
-    .kop-surat img {
-        width: 80px; /* Ukuran asli yang Anda inginkan */
-        height: auto;
-    }
+        .space {
+            height: 100px; /* Tambahkan sedikit ruang tinggi */
+            position: relative;
+            width: 100%;
+        }
 
-    .kop-surat td.text {
-        text-align: center;
-        vertical-align: middle;
-    }
-
-    .kop-surat h3 { margin: 0; font-size: 16pt; font-weight: bold; text-transform: uppercase; }
-    .kop-surat h4 { margin: 0; font-size: 14pt; font-weight: bold; text-transform: uppercase; }
-    .kop-surat p { margin: 2px 0; font-size: 10pt; }
-
-    /* --- JUDUL & ISI --- */
-    .judul-surat { text-align: center; margin: 30px 0 20px 0; }
-    .judul-surat h2 { text-decoration: underline; font-size: 14pt; font-weight: bold; text-transform: uppercase; }
-    .nomor-surat { text-align: center; margin-bottom: 30px; font-size: 11pt; }
-
-    .isi-surat table { margin-left: 50px; margin-top: 15px; margin-bottom: 15px; }
-    .isi-surat table td { padding: 3px 0; vertical-align: top; }
-    .isi-surat table td:first-child { width: 200px; }
-
-    /* --- TANDA TANGAN --- */
-    .ttd {
-        margin-top: 150px;
-        margin-left: 60%;
-        text-align: center;
-    }
-
-    .ttd-space {
-        height: 60px;
-        position: relative;
-    }
-
-    /* Mengatur posisi preview signature agar pas di tengah */
-    @media screen {
-        .ttd-space img {
+        .signature-img {
+            /* 1. ATUR UKURAN DI SINI */
+            width: 150px;      /* Ubah lebar gambar sesuai keinginan */
+            height: auto;
+            
+            /* 2. ATUR POSISI */
             position: absolute;
-            width: 300px;
-            left: 50%;
-            transform: translateX(-50%);
-            top: -70px;
-            opacity: 0.6;
+            top: -10px;        /* Tarik ke atas agar sedikit menimpa teks jabatan */
+            left: 50%;         /* Geser ke tengah kontainer */
+            
+            /* 3. TEKNIK CENTER MANUAL UNTUK PDF */
+            /* Margin left harus bernilai NEGATIF SETENGAH dari Lebar Gambar (Width) */
+            /* Jika width 150px, maka margin-left harus -75px */
+            margin-left: -75px; 
+            
+            z-index: 10;
         }
-    }
 
-    .nama-ttd { text-decoration: underline; font-weight: bold; text-transform: uppercase; }
-    .nip { font-size: 10pt; }
+        .nama-lurah {
+            font-weight: bold;
+            text-decoration: underline;
+            text-transform: uppercase;
+        }
+    </style>
 </head>
 <body>
-    {{-- KOP SURAT --}}
-    <div class="kop-surat">
-        <table>
+    <div class="container">
+        {{-- KOP SURAT --}}
+        <table class="kop-table">
             <tr>
-                <td class="logo">
-                    <img src="{{ public_path('assets/logo/parepare.png') }}" style="width: 60px;">
+                <td class="logo-cell">
+                    <img src="{{ request()->is('preview-pdf-template*') ? asset('assets/logo/parepare.png') : public_path('assets/logo/parepare.png') }}" width="75">
                 </td>
-                <td class="text">
+                <td class="text-cell">
                     <h3>Pemerintah Kota Parepare</h3>
                     <h4>Kecamatan {{ strtoupper($kelurahan->kecamatan) }}</h4>
                     <h4>Kelurahan {{ strtoupper($kelurahan->nama) }}</h4>
@@ -119,22 +104,22 @@
                 </td>
             </tr>
         </table>
-    </div>
 
-    {{-- JUDUL & NOMOR --}}
-    <div class="judul-surat">
-        <h2>Surat Keterangan Ahli Waris</h2>
-    </div>
-    <div class="nomor-surat">
-        Nomor : {{ $nomor_surat }}
-    </div>
+        {{-- JUDUL --}}
+        <div class="judul-area">
+            <h2>Surat Keterangan Ahli Waris</h2>
+            <div>Nomor: {{ $nomor_surat }}</div>
+        </div>
 
-    <div class="isi-surat">
-        <p>Yang bertanda tangan di bawah ini :</p>
-        <table>
+        {{-- ISI --}}
+        <div class="isi-text">
+            Yang bertanda tangan di bawah ini :
+        </div>
+        
+        <table class="data-table">
             <tr>
-                <td>N a m a</td>
-                <td>:</td>
+                <td width="180">N a m a</td>
+                <td width="10">:</td>
                 <td><strong>{{ $nama_lurah }}</strong></td>
             </tr>
             <tr>
@@ -149,7 +134,9 @@
             </tr>
         </table>
 
-        <p>Dengan ini Memberikan Keterangan Kepada Saudara (i) :</p>
+        <div class="isi-text">
+            Dengan ini Memberikan Keterangan Kepada Saudara (i) :
+        </div>
         
         @php
             $daftar_ahli_waris = $daftar_ahli_waris ?? [];
@@ -160,63 +147,57 @@
         @endphp
 
         @if($ahli_utama)
-        <table>
+        <table class="data-table">
             <tr>
-                <td>N a m a</td>
-                <td>:</td>
+                <td width="180">N a m a</td>
+                <td width="10">:</td>
                 <td><strong>{{ strtoupper($ahli_utama['nama']) }}</strong></td>
             </tr>
-            <tr>
-                <td>Tempat Tanggal Lahir</td>
-                <td>:</td>
-                <td>{{ $ahli_utama['ttl'] ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td>Alamat</td>
-                <td>:</td>
-                <td>{{ $ahli_utama['alamat'] ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td>Pekerjaan</td>
-                <td>:</td>
-                <td>{{ $ahli_utama['pekerjaan'] ?? '-' }}</td>
-            </tr>
+            <tr><td>Tempat Tanggal Lahir</td><td>:</td><td>{{ $ahli_utama['ttl'] ?? '-' }}</td></tr>
+            <tr><td>Alamat</td><td>:</td><td>{{ $ahli_utama['alamat'] ?? '-' }}</td></tr>
+            <tr><td>Pekerjaan</td><td>:</td><td>{{ $ahli_utama['pekerjaan'] ?? '-' }}</td></tr>
         </table>
         @endif
 
-        <p style="text-indent: 40px; margin-top: 15px;">
+        <div class="isi-text" style="text-indent: 40px;">
             Adalah benar ahli Waris dari almarhum/almarhumah <strong>"{{ strtoupper($nama_pewaris) }}"</strong> yang 
             meninggal dunia hari {{ $hari_meninggal ?? '........' }} tanggal {{ $tanggal_meninggal ?? '-' }} karena sakit dan beralamat terakhir di {{ $alamat_pewaris ?? '-' }}.
-        </p>
+        </div>
 
         @if(count($daftar_ahli_waris) > 1)
-        <p style="margin-top: 10px;">Adapun ahli waris lainnya adalah sebagai berikut:</p>
-        <div style="margin-left: 40px;">
+        <div class="isi-text" style="margin-top: 10px;">Adapun ahli waris lainnya adalah sebagai berikut:</div>
+        <div style="margin-left: 40px; margin-bottom: 15px;">
             @foreach($daftar_ahli_waris as $index => $ahli)
                 @if($index > 0)
-                <p>{{ $index }}. {{ $ahli['nama'] }} ({{ $ahli['hubungan'] }})</p>
+                <div style="margin-bottom: 3px;">{{ $index }}. {{ $ahli['nama'] }} ({{ $ahli['hubungan'] }})</div>
                 @endif
             @endforeach
         </div>
         @endif
 
-        <p style="text-indent: 40px; margin-top: 15px;">
+        <div class="isi-text" style="text-indent: 40px;">
             Demikian surat keterangan ahli waris ini dibuat dengan sebenar-benarnya untuk dapat dipergunakan sebagaimana mestinya.
-        </p>
-    </div>
-    {{-- TANDA TANGAN --}}
-    <div class="ttd">
-            <p>Parepare, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-            <p>LURAH {{ strtoupper($kelurahan->nama) }}</p>
-            
-            <div class="ttd-space">
-                @if(request()->is('preview-pdf-template*'))
-                    <img src="{{ asset('signatures/bahrul_signature.png') }}" alt="Signature Preview">
-                @endif
-            </div>
-
-            <div class="nama-ttd">{{ strtoupper($nama_lurah) }}</div>
-            <div class="nip">NIP. {{ $nip_lurah ?? '-' }}</div>
         </div>
+
+        {{-- TANDA TANGAN --}}
+        <table class="ttd-table">
+            <tr>
+                <td class="ttd-cell"></td>
+                <td class="sign-cell">
+                    <div>Parepare, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</div>
+                    <div style="margin-bottom: 5px;">LURAH {{ strtoupper($kelurahan->nama) }}</div>
+                    
+                    <div class="space">
+                        @if(request()->is('preview-pdf-template*'))
+                            <img src="{{ asset('signatures/bahrul_signature.png') }}" class="signature-img">
+                        @endif
+                    </div>
+
+                    <div class="nama-lurah">{{ $nama_lurah }}</div>
+                    <div>NIP. {{ $nip_lurah ?? '-' }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
 </body>
 </html>

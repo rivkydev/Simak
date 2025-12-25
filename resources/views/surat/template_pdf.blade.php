@@ -4,141 +4,99 @@
     <meta charset="utf-8">
     <title>{{ $judul_surat }}</title>
     <style>
-        @page {
-            margin: 2cm 2cm 2cm 2cm;
-        }
-        
+        @page { margin: 0; }
         body {
             font-family: 'Times New Roman', Times, serif;
             font-size: 12pt;
-            line-height: 1.6;
+            margin: 0;
+            padding: 0;
         }
-
-        .kop-surat {
-            border-bottom: 3px solid #000;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+        .container {
+            width: 700px;
+            margin: 40px auto;
+            padding: 0 40px;
         }
-
-        .kop-surat table {
+        
+        /* KOP SURAT */
+        .kop-table {
             width: 100%;
-            border-collapse: collapse;
+            border-bottom: 3px double #000;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+        .logo-cell { width: 80px; text-align: left; vertical-align: middle; }
+        .text-cell { text-align: center; vertical-align: middle; }
+        .text-cell h3 { margin: 0; font-size: 16pt; text-transform: uppercase; }
+        .text-cell h4 { margin: 0; font-size: 14pt; text-transform: uppercase; }
+        .text-cell p { margin: 0; font-size: 10pt; }
+
+        /* JUDUL */
+        .judul-area { text-align: center; margin-bottom: 25px; }
+        .judul-area h2 {
+            text-decoration: underline; font-size: 14pt; margin: 0;
+            text-transform: uppercase; font-weight: bold;
         }
 
-        .kop-surat td.logo {
-            width: 100px;
-            vertical-align: middle;
+        /* ISI */
+        .isi-text { text-align: justify; line-height: 1.5; margin-bottom: 10px; }
+        .data-table { width: 100%; margin: 10px 0 15px 40px; }
+        .data-table td { vertical-align: top; padding: 2px 0; }
+
+        /* --- TANDA TANGAN --- */
+        .ttd-table {
+            width: 100%;
+            margin-top: 250px;
         }
 
-        .kop-surat td.text {
+        .ttd-cell {
+            width: 60%; /* Kolom kosong sebelah kiri */
+        }
+
+        .sign-cell {
+            width: 40%;
             text-align: center;
-            vertical-align: middle;
         }
 
-        .kop-surat img {
-            width: 80px;
+        .space {
+            height: 100px; /* Tambahkan sedikit ruang tinggi */
+            position: relative;
+            width: 100%;
+        }
+
+        .signature-img {
+            /* 1. ATUR UKURAN DI SINI */
+            width: 150px;      /* Ubah lebar gambar sesuai keinginan */
             height: auto;
+            
+            /* 2. ATUR POSISI */
+            position: absolute;
+            top: -10px;        /* Tarik ke atas agar sedikit menimpa teks jabatan */
+            left: 50%;         /* Geser ke tengah kontainer */
+            
+            /* 3. TEKNIK CENTER MANUAL UNTUK PDF */
+            /* Margin left harus bernilai NEGATIF SETENGAH dari Lebar Gambar (Width) */
+            /* Jika width 150px, maka margin-left harus -75px */
+            margin-left: -75px; 
+            
+            z-index: 10;
         }
 
-        .kop-surat h3 {
-            margin: 0;
-            font-size: 16pt;
+        .nama-lurah {
             font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .kop-surat h4 {
-            margin: 0;
-            font-size: 14pt;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .kop-surat p {
-            margin: 2px 0;
-            font-size: 10pt;
-        }
-
-        .judul-surat {
-            text-align: center;
-            margin: 30px 0 20px 0;
-        }
-
-        .judul-surat h2 {
-            margin: 0;
             text-decoration: underline;
-            font-size: 14pt;
-            font-weight: bold;
             text-transform: uppercase;
         }
-
-        .nomor-surat {
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 11pt;
-        }
-
-        .isi-surat {
-            text-align: justify;
-            margin-bottom: 30px;
-        }
-
-        .isi-surat table {
-            margin-left: 50px;
-            margin-top: 15px;
-            margin-bottom: 15px;
-        }
-
-        .isi-surat table td {
-            padding: 3px 0;
-            vertical-align: top;
-        }
-
-        .isi-surat table td:first-child {
-            width: 200px;
-        }
-
-        .isi-surat table td:nth-child(2) {
-            width: 20px;
-            text-align: center;
-        }
-
-        .ttd {
-    margin-top: 20px; /* Kurangi agar rapat */
-    margin-left: 60%;
-    text-align: center; /* Tengah untuk rapi */
-    page-break-inside: avoid; /* Hindari pecah halaman */
-}
-
-.ttd .nama-ttd {
-    margin-top: 0; /* Rapatkan dengan placeholder */
-    text-decoration: underline;
-    font-weight: bold;
-    text-transform: uppercase;
-    margin-bottom: 5px;
-}
-
-.ttd .nip {
-    font-size: 10pt;
-}
-        .ttd-placeholder {
-    position: relative; /* Agar bisa overlay */
-    height: 150px; /* Ruang untuk gambar + nama + NIP */
-    width: 40%; /* Lebar TTD */
-    float: right; /* Posisi kanan */
-    clear: both;
-}
     </style>
 </head>
 <body>
-    {{-- KOP SURAT --}}
-    <div class="kop-surat">
-        <table>
+    <div class="container">
+        {{-- KOP SURAT --}}
+        <table class="kop-table">
             <tr>
-                <td class="logo">
-                    <img src="{{ public_path('assets/logo/parepare.png') }}" alt="Logo">
+                <td class="logo-cell">
+                    <img src="{{ request()->is('preview-pdf-template*') ? asset('assets/logo/parepare.png') : public_path('assets/logo/parepare.png') }}" width="75">
                 </td>
-                <td class="text">
+                <td class="text-cell">
                     <h3>Pemerintah Kota Parepare</h3>
                     <h4>Kecamatan {{ strtoupper($kelurahan->kecamatan) }}</h4>
                     <h4>Kelurahan {{ strtoupper($kelurahan->nama) }}</h4>
@@ -146,118 +104,89 @@
                 </td>
             </tr>
         </table>
-    </div>
 
-    {{-- JUDUL SURAT --}}
-    <div class="judul-surat">
-        <h2>{{ strtoupper($judul_surat) }}</h2>
-    </div>
+        {{-- JUDUL SURAT --}}
+        <div class="judul-area">
+            <h2>{{ strtoupper($judul_surat) }}</h2>
+            <div style="margin-top: 5px;">Nomor: {{ $nomor_surat }}</div>
+        </div>
 
-    {{-- NOMOR SURAT --}}
-    <div class="nomor-surat">
-        Nomor: {{ $nomor_surat }}
-    </div>
-
-    {{-- ISI SURAT --}}
-    <div class="isi-surat">
-        <p style="text-indent: 50px;">
+        {{-- ISI SURAT --}}
+        <div class="isi-text" style="text-indent: 45px;">
             Yang bertanda tangan di bawah ini Lurah {{ $kelurahan->nama }}, Kecamatan {{ $kelurahan->kecamatan }}, 
             Kota Parepare, dengan ini menerangkan bahwa:
-        </p>
+        </div>
 
-        <table>
+        <table class="data-table">
             @if(isset($nama))
             <tr>
-                <td>Nama</td>
-                <td>:</td>
+                <td width="200">Nama</td>
+                <td width="10">:</td>
                 <td><strong>{{ $nama }}</strong></td>
             </tr>
             @endif
             
             @if(isset($nik))
-            <tr>
-                <td>NIK</td>
-                <td>:</td>
-                <td>{{ $nik }}</td>
-            </tr>
+            <tr><td>NIK</td><td>:</td><td>{{ $nik }}</td></tr>
             @endif
             
             @if(isset($ttl))
-            <tr>
-                <td>Tempat/Tanggal Lahir</td>
-                <td>:</td>
-                <td>{{ $ttl }}</td>
-            </tr>
+            <tr><td>Tempat/Tanggal Lahir</td><td>:</td><td>{{ $ttl }}</td></tr>
             @endif
             
             @if(isset($jenis_kelamin))
-            <tr>
-                <td>Jenis Kelamin</td>
-                <td>:</td>
-                <td>{{ $jenis_kelamin }}</td>
-            </tr>
+            <tr><td>Jenis Kelamin</td><td>:</td><td>{{ $jenis_kelamin }}</td></tr>
             @endif
             
             @if(isset($agama))
-            <tr>
-                <td>Agama</td>
-                <td>:</td>
-                <td>{{ $agama }}</td>
-            </tr>
+            <tr><td>Agama</td><td>:</td><td>{{ $agama }}</td></tr>
             @endif
             
             @if(isset($warga_negara))
-            <tr>
-                <td>Kewarganegaraan</td>
-                <td>:</td>
-                <td>{{ $warga_negara }}</td>
-            </tr>
+            <tr><td>Kewarganegaraan</td><td>:</td><td>{{ $warga_negara }}</td></tr>
             @endif
             
             @if(isset($pekerjaan))
-            <tr>
-                <td>Pekerjaan</td>
-                <td>:</td>
-                <td>{{ $pekerjaan }}</td>
-            </tr>
+            <tr><td>Pekerjaan</td><td>:</td><td>{{ $pekerjaan }}</td></tr>
             @endif
             
             @if(isset($alamat))
-            <tr>
-                <td>Alamat</td>
-                <td>:</td>
-                <td>{{ $alamat }}</td>
-            </tr>
+            <tr><td>Alamat</td><td>:</td><td>{{ $alamat }}</td></tr>
             @endif
             
             @if(isset($rt) && isset($rw))
-            <tr>
-                <td>RT/RW</td>
-                <td>:</td>
-                <td>{{ $rt }}/{{ $rw }}</td>
-            </tr>
+            <tr><td>RT/RW</td><td>:</td><td>{{ $rt }}/{{ $rw }}</td></tr>
             @endif
         </table>
 
-        <p style="text-indent: 50px;">
+        <div class="isi-text" style="text-indent: 45px;">
             Adalah benar warga kami yang berdomisili di Kelurahan {{ $kelurahan->nama }}, 
             Kecamatan {{ $kelurahan->kecamatan }}, Kota Parepare.
-        </p>
+        </div>
 
-        <p style="text-indent: 50px;">
+        <div class="isi-text" style="text-indent: 45px;">
             Demikian surat keterangan ini dibuat dengan sebenarnya untuk dapat dipergunakan sebagaimana mestinya.
-        </p>
-    </div>
-    {{-- TANDA TANGAN --}}
-    <div class="ttd">
-        <p>Parepare, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p> <!-- Gunakan Carbon untuk tanggal Indonesia -->
-        <p>LURAH {{ strtoupper($kelurahan->nama) }}</p>
-        
-        <!-- Placeholder untuk gambar signature: Reserve ruang agar rapi -->
-        <div style="height: 50px; width: 100%; margin-bottom: 10px;"></div> <!-- Ruang kosong untuk gambar -->
-        
-        <div class="nama-ttd">{{ strtoupper($nama_lurah) }}</div>
-        <div class="nip">NIP. {{ $nip_lurah ?? '-' }}</div>
+        </div>
+
+        {{-- TANDA TANGAN --}}
+        <table class="ttd-table">
+            <tr>
+                <td class="ttd-cell"></td>
+                <td class="sign-cell">
+                    <div>Parepare, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</div>
+                    <div style="margin-bottom: 5px;">LURAH {{ strtoupper($kelurahan->nama) }}</div>
+                    
+                    <div class="space">
+                        @if(request()->is('preview-pdf-template*'))
+                            <img src="{{ asset('signatures/bahrul_signature.png') }}" class="signature-img">
+                        @endif
+                    </div>
+
+                    <div class="nama-lurah">{{ $nama_lurah }}</div>
+                    <div>NIP. {{ $nip_lurah ?? '-' }}</div>
+                </td>
+            </tr>
+        </table>
     </div>
 </body>
 </html>
