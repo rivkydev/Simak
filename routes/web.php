@@ -90,3 +90,68 @@ Route::middleware(['auth:pegawai', 'role:2,3'])->group(function () {
     
     Route::get('/pegawai/umkm', [LurahController::class, 'umkm'])->name('pegawai.umkm');
 });
+
+// Pastikan tidak ada karakter aneh sebelum baris ini
+Route::get('/preview-pdf-template', function (\Illuminate\Http\Request $request) {
+    // 1. Ambil tipe surat dari URL, default ke 'domisili'
+    $type = $request->query('type', 'domisili');
+
+    // 2. Data dummy dasar (Common data)
+    $data = [
+        'kelurahan' => (object)[
+            'nama' => 'Tiro Sompe',
+            'kecamatan' => 'Bacukiki Barat',
+            'kode_pos' => '91125'
+        ],
+        'alamat_kelurahan' => 'Jl. Bau Massepe No. 151',
+        'nomor_surat' => '400/001/KTS/XII/2025',
+        'nama_lurah' => 'NAMA LURAH CONTOH, S.Sos',
+        'nip_lurah' => '19800101 200501 1 001',
+        'nama' => 'BUDI SANTOSO',
+        'alamat' => 'Jl. Pelabuhan No. 10, Kel. Tiro Sompe',
+    ];
+
+    // 3. Logika penentuan View dan Data Spesifik
+    switch ($type) {
+        case 'domisili':
+            $view = 'surat.domisili_usaha_pdf'; // Sesuaikan folder jika ada (misal: 'surat.domisili_usaha_pdf')
+            $data['nama_perusahaan'] = 'UMKM SEJAHTERA BERSAMA';
+            $data['penanggung_jawab'] = 'BUDI SANTOSO';
+            $data['alamat_perusahaan'] = 'Jl. Pelabuhan No. 10, Kel. Tiro Sompe';
+            break;
+            
+        case 'kematian':
+            $view = 'surat.kematian_pdf';
+            $data['jenkel'] = 'Laki-laki';
+            $data['hari_kematian'] = 'Senin';
+            $data['tanggal_kematian'] = '22 Desember 2025';
+            $data['sebab_kematian'] = 'Sakit';
+            break;
+            
+        case 'waris':
+            $view = 'surat.ahli_waris_pdf';
+            $data['nama_pewaris'] = 'ALMARHUM FULAN';
+            $data['tanggal_meninggal'] = '01 Januari 2025';
+            $data['daftar_ahli_waris'] = [
+                ['nama' => 'SITI AMINAH', 'hubungan' => 'Istri'],
+                ['nama' => 'AHMAD RIFAI', 'hubungan' => 'Anak Kandung'],
+            ];
+            break;
+            
+        case 'nikah':
+            $view = 'surat.belum_menikah_pdf';
+            $data['tempat_lahir'] = 'Parepare';
+            $data['tanggal_lahir'] = '10 Mei 1995';
+            break;
+
+        case 'rumah':
+            $view = 'surat.tidak_memiliki_rumah_pdf';
+            $data['pekerjaan'] = 'Wiraswasta';
+            break;
+
+        default:
+            return response("Tipe surat '$type' tidak ditemukan.", 404);
+    }
+
+    return view($view, $data);
+});

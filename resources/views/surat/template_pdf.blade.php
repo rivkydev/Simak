@@ -104,19 +104,30 @@
         }
 
         .ttd {
-            margin-top: 50px;
-            margin-left: 60%;
-        }
+    margin-top: 20px; /* Kurangi agar rapat */
+    margin-left: 60%;
+    text-align: center; /* Tengah untuk rapi */
+    page-break-inside: avoid; /* Hindari pecah halaman */
+}
 
-        .ttd .nama-ttd {
-            margin-top: 80px;
-            text-decoration: underline;
-            font-weight: bold;
-        }
+.ttd .nama-ttd {
+    margin-top: 0; /* Rapatkan dengan placeholder */
+    text-decoration: underline;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
 
-        .ttd .nip {
-            font-size: 10pt;
-        }
+.ttd .nip {
+    font-size: 10pt;
+}
+        .ttd-placeholder {
+    position: relative; /* Agar bisa overlay */
+    height: 150px; /* Ruang untuk gambar + nama + NIP */
+    width: 40%; /* Lebar TTD */
+    float: right; /* Posisi kanan */
+    clear: both;
+}
     </style>
 </head>
 <body>
@@ -237,13 +248,16 @@
             Demikian surat keterangan ini dibuat dengan sebenarnya untuk dapat dipergunakan sebagaimana mestinya.
         </p>
     </div>
-
     {{-- TANDA TANGAN --}}
     <div class="ttd">
-        <p>Parepare, {{ $tanggal }}</p>
+        <p>Parepare, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p> <!-- Gunakan Carbon untuk tanggal Indonesia -->
         <p>LURAH {{ strtoupper($kelurahan->nama) }}</p>
-        <p class="nama-ttd">{{ $nama_lurah }}</p>
-        <p class="nip">NIP. {{ $nip_lurah }}</p>
+        
+        <!-- Placeholder untuk gambar signature: Reserve ruang agar rapi -->
+        <div style="height: 50px; width: 100%; margin-bottom: 10px;"></div> <!-- Ruang kosong untuk gambar -->
+        
+        <div class="nama-ttd">{{ strtoupper($nama_lurah) }}</div>
+        <div class="nip">NIP. {{ $nip_lurah ?? '-' }}</div>
     </div>
 </body>
 </html>

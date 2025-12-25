@@ -2,102 +2,48 @@
 
 namespace App\Helpers;
 
-use setasign\Fpdi\Fpdi;
+use setasign\Fpdi\TcpdfFpdi; // Pastikan library terinstal
 
 class PdfSigner
 {
-    /**
-     * Menambahkan tanda tangan digital ke PDF yang sudah ada
-     * 
-     * @param string $pdfPath Path ke file PDF asli
-     * @param string $signaturePath Path ke gambar tanda tangan (PNG dengan background transparan)
-     * @param string $signerName Nama penandatangan
-     * @param string $signerNIP NIP penandatangan
-     * @return string Path ke PDF yang sudah ditandatangani
-     */
-    public static function addSignature($pdfPath, $signaturePath, $signerName, $signerNIP)
+    public static function addSignature($pdfPath, $signaturePath, $nama, $nip)
     {
-        $pdf = new Fpdi();
-        
-        // Hitung jumlah halaman
+        $pdf = new TcpdfFpdi();
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+
+        // Import halaman dari PDF original
         $pageCount = $pdf->setSourceFile($pdfPath);
-        
-        // Loop semua halaman
         for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-            // Import halaman
             $templateId = $pdf->importPage($pageNo);
             $size = $pdf->getTemplateSize($templateId);
-            
-            // Tambah halaman dengan ukuran yang sama
             $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-            
-            // Gunakan template (halaman asli)
             $pdf->useTemplate($templateId);
-            
-            // Jika halaman terakhir, tambahkan tanda tangan
-            if ($pageNo === $pageCount) {
-                self::addSignatureToPage($pdf, $signaturePath, $signerName, $signerNIP, $size);
-            }
-        }
-        
-        // Simpan ke temporary file
-        $tempPath = storage_path('app/temp/signed_' . time() . '.pdf');
-        
-        // Pastikan folder temp ada
-        if (!file_exists(storage_path('app/temp'))) {
-            mkdir(storage_path('app/temp'), 0755, true);
-        }
-        
-        $pdf->Output('F', $tempPath);
-        
-        return $tempPath;
+
+            // Hanya tambahkan gambar signature di halaman terakhir, di atas nama
+           if ($pageNo === $pageCount && $signaturePath && file_exists($signaturePath)) {
+        $w = $size['width'];
+        $h = $size['height'];
+
+        // UNTUK LEBIH KE KANAN:
+        // Sebelumnya mungkin menggunakan $w - 60 atau $w * 0.6.
+        // Ubah menjadi pengurang yang lebih kecil atau persentase yang lebih besar.
+        $x = $w - 55; // Mengurangi nilai pengurang akan menggeser gambar ke kanan
+
+        // UNTUK AGAK NAIK KE ATAS:
+        // Sebelumnya menggunakan $h - 70.
+        // Ubah menjadi pengurang yang lebih besar untuk menarik koordinat Y ke atas.
+        $y = $h - 85; // Menambah nilai pengurang akan menarik gambar lebih tinggi dari bawah kertas
+
+        // Ukuran lebar gambar signature (misal: 45mm)
+        $pdf->Image($signaturePath, $x, $y, 45, 0, 'PNG', '', '', false, 300, '', false, false, 0);
     }
-    
-    /**
-     * Menambahkan signature ke halaman
-     */
-    private static function addSignatureToPage($pdf, $signaturePath, $signerName, $signerNIP, $pageSize)
-    {
-        $pdf->SetFont('Times', '', 10);
-        
-        // Posisi tanda tangan (kanan bawah)
-        $x = $pageSize['width'] * 0.6; // 60% dari lebar (kanan)
-        $y = $pageSize['height'] - 60; // 60mm dari bawah
-        
-        // Tambahkan teks "Mengetahui,"
-        $pdf->SetXY($x, $y);
-        $pdf->Cell(0, 5, 'Telah Diverifikasi,', 0, 1, 'L');
-        
-        // Tambahkan nama penandatangan
-        $pdf->SetXY($x, $y + 5);
-        $pdf->SetFont('Times', 'B', 10);
-        $pdf->Cell(0, 5, strtoupper($signerName), 0, 1, 'L');
-        
-        // Tambahkan gambar tanda tangan jika ada
-        if (file_exists($signaturePath)) {
-            $pdf->Image($signaturePath, $x, $y + 12, 40, 20, 'PNG');
-        } else {
-            // Jika tidak ada gambar, tambahkan teks
-            $pdf->SetXY($x, $y + 12);
-            $pdf->SetFont('Times', 'I', 8);
-            $pdf->Cell(40, 20, '(Ditandatangani secara digital)', 0, 1, 'C');
         }
-        
-        // Tambahkan garis bawah nama
-        $pdf->SetXY($x, $y + 35);
-        $pdf->SetFont('Times', 'BU', 10);
-        $pdf->Cell(0, 5, strtoupper($signerName), 0, 1, 'L');
-        
-        // Tambahkan NIP
-        $pdf->SetXY($x, $y + 40);
-        $pdf->SetFont('Times', '', 9);
-        $pdf->Cell(0, 5, 'NIP. ' . $signerNIP, 0, 1, 'L');
-        
-        // Tambahkan timestamp verifikasi
-        $pdf->SetXY($x, $y + 46);
-        $pdf->SetFont('Times', 'I', 7);
-        $pdf->SetTextColor(100, 100, 100);
-        $pdf->Cell(0, 3, 'Diverifikasi: ' . now()->format('d/m/Y H:i'), 0, 1, 'L');
-        $pdf->SetTextColor(0, 0, 0);
+
+        // Simpan PDF signed baru sebagai temporary
+        $signedPath = storage_path('app/public/' . basename($pdfPath) . '_signed.pdf');
+        $pdf->Output($signedPath, 'F');
+
+        return $signedPath;
     }
 }

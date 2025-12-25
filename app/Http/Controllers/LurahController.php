@@ -140,43 +140,29 @@ class LurahController extends Controller
     
     // Jika disetujui, tambahkan tanda tangan ke PDF
     if ($request->status === 'diterima' && $surat->file_surat) {
-        try {
-            // Path ke PDF asli
-            $originalPdfPath = storage_path('app/public/' . $surat->file_surat);
-            
-            // Path ke gambar tanda tangan
-            $signaturePath = public_path('signatures/bahrul_signature.png');
-            
-            // Jika tidak ada gambar signature, gunakan path kosong (akan pakai teks)
-            if (!file_exists($signaturePath)) {
-                $signaturePath = '';
-            }
-            
-            // Tambahkan tanda tangan
-            $signedPdfPath = PdfSigner::addSignature(
-                $originalPdfPath,
-                $signaturePath,
-                $pegawai->nama,
-                $pegawai->nip ?? '-'
-            );
-            
-            // Backup PDF lama (opsional)
-            $backupPath = str_replace('.pdf', '_unsigned.pdf', $surat->file_surat);
-            Storage::copy('public/' . $surat->file_surat, 'public/' . $backupPath);
-            
-            // Replace PDF lama dengan yang sudah ditandatangani
-            Storage::put('public/' . $surat->file_surat, file_get_contents($signedPdfPath));
-            
-            // Hapus temporary file
-            if (file_exists($signedPdfPath)) {
-                unlink($signedPdfPath);
-            }
-            
-        } catch (\Exception $e) {
-            // Log error tapi tetap lanjutkan verifikasi
-            \Log::error('Failed to add signature: ' . $e->getMessage());
+    try {
+        $originalPdfPath = storage_path('app/public/' . $surat->file_surat);
+        $signaturePath = public_path('signatures/bahrul_signature.png'); // Path gambar signature
+        
+        // Panggil PdfSigner (hanya tambah gambar)
+        $signedPdfPath = PdfSigner::addSignature($originalPdfPath, $signaturePath, $pegawai->nama, $pegawai->nip ?? '-');
+        
+        // Backup PDF unsigned (optional)
+        $backupPath = str_replace('.pdf', '_unsigned.pdf', $surat->file_surat);
+        Storage::copy('public/' . $surat->file_surat, 'public/' . $backupPath);
+        
+        // Replace dengan signed
+        Storage::put('public/' . $surat->file_surat, file_get_contents($signedPdfPath));
+        
+        // Hapus temp
+        if (file_exists($signedPdfPath)) {
+            unlink($signedPdfPath);
         }
+    } catch (\Exception $e) {
+        \Log::error('Failed to add signature: ' . $e->getMessage());
+        // Lanjutkan verifikasi meski gagal tambah signature
     }
+}
     
     $surat->save();
 

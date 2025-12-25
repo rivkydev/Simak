@@ -104,22 +104,23 @@
         }
 
         .ttd {
-            margin-top: 40px;
-            margin-left: 60%;
-            text-align: left;
-        }
+    margin-top: 20px; /* Kurangi agar rapat */
+    margin-left: 60%;
+    text-align: center; /* Tengah untuk rapi */
+    page-break-inside: avoid; /* Hindari pecah halaman */
+}
 
-        .ttd .nama-ttd {
-            margin-top: 70px;
-            text-decoration: underline;
-            font-weight: bold;
-            margin-bottom: 0;
-        }
+.ttd .nama-ttd {
+    margin-top: 0; /* Rapatkan dengan placeholder */
+    text-decoration: underline;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
 
-        .ttd .nip {
-            margin-top: 0;
-            font-size: 11pt;
-        }
+.ttd .nip {
+    font-size: 10pt;
+}
 
         .isi-surat table {
     /* Gunakan 60px untuk 1x Tab atau 100px-120px untuk 2x Tab */
@@ -137,6 +138,13 @@
 /* Sesuaikan lebar kolom label agar titik dua (:) sejajar rapi */
 .isi-surat table td:first-child {
     width: 140px; 
+}
+.ttd-placeholder {
+    position: relative; /* Agar bisa overlay */
+    height: 150px; /* Ruang untuk gambar + nama + NIP */
+    width: 40%; /* Lebar TTD */
+    float: right; /* Posisi kanan */
+    clear: both;
 }
     </style>
 </head>
@@ -239,13 +247,19 @@
             Demikian Surat Keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya.
         </p>
     </div>
-
     {{-- TANDA TANGAN --}}
     <div class="ttd">
-        <p>Parepare, {{ $tanggal }}</p>
-        <p>LURAH {{ strtoupper($kelurahan->nama) }}</p>
-        <div class="nama-ttd">{{ $nama_lurah }}</div>
-        <div class="nip">NIP. {{ $nip_lurah }}</div>
-    </div>
+            <p>Parepare, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+            <p>LURAH {{ strtoupper($kelurahan->nama) }}</p>
+            
+            <div class="ttd-space">
+                @if(request()->is('preview-pdf-template*'))
+                    <img src="{{ asset('signatures/bahrul_signature.png') }}" alt="Signature Preview">
+                @endif
+            </div>
+
+            <div class="nama-ttd">{{ strtoupper($nama_lurah) }}</div>
+            <div class="nip">NIP. {{ $nip_lurah ?? '-' }}</div>
+        </div>
 </body>
 </html>

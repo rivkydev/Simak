@@ -4,160 +4,152 @@
     <meta charset="utf-8">
     <title>Surat Keterangan Domisili Usaha</title>
     <style>
+        /* Pengaturan Kertas Langsung ke DomPDF */
         @page {
-            margin: 2cm 2cm 2cm 2cm;
+            margin: 0; /* Kita atur margin lewat container agar lebih terkontrol */
         }
         
         body {
             font-family: 'Times New Roman', Times, serif;
             font-size: 12pt;
-            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: white;
         }
 
-        .kop-surat {
-            border-bottom: 3px solid #000;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+        .container {
+            width: 700px; /* Ukuran aman untuk A4 agar tidak terpotong kanan */
+            margin: 40px auto;
+            padding: 0 40px;
         }
 
-        .kop-surat table {
+        /* --- KOP SURAT --- */
+        .kop-table {
             width: 100%;
-            border-collapse: collapse;
+            border-bottom: 3px double #000;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
         }
 
-        .kop-surat td.logo {
-            width: 100px;
-            vertical-align: middle;
-        }
-
-        .kop-surat td.text {
-            text-align: center;
-            vertical-align: middle;
-        }
-
-        .kop-surat img {
+        .logo-cell {
             width: 80px;
-            height: auto;
+            text-align: left;
+            vertical-align: middle;
         }
 
-        .kop-surat h3 {
-            margin: 0;
-            font-size: 16pt;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .kop-surat h4 {
-            margin: 0;
-            font-size: 14pt;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .kop-surat p {
-            margin: 2px 0;
-            font-size: 10pt;
-        }
-
-        .judul-surat {
+        .text-cell {
             text-align: center;
-            margin: 30px 0 20px 0;
+            vertical-align: middle;
         }
 
-        .judul-surat h2 {
-            margin: 0;
+        .text-cell h3 { margin: 0; font-size: 16pt; text-transform: uppercase; }
+        .text-cell h4 { margin: 0; font-size: 14pt; text-transform: uppercase; }
+        .text-cell p { margin: 0; font-size: 10pt; }
+
+        /* --- JUDUL --- */
+        .judul-area {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .judul-area h2 {
             text-decoration: underline;
             font-size: 14pt;
-            font-weight: bold;
+            margin-bottom: 0;
             text-transform: uppercase;
         }
 
-        .nomor-surat {
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 11pt;
-        }
-
-        .isi-surat {
+        /* --- ISI --- */
+        .isi-text {
             text-align: justify;
-            margin-bottom: 30px;
-        }
-
-        .isi-surat table {
-            margin-left: 50px;
-            margin-top: 15px;
+            line-height: 1.5;
             margin-bottom: 15px;
         }
 
-        .isi-surat table td {
-            padding: 3px 0;
+        .data-table {
+            width: 100%;
+            margin: 15px 0 15px 40px; /* Indentasi tabel data */
+        }
+
+        .data-table td {
             vertical-align: top;
+            padding: 4px 0;
         }
 
-        .isi-surat table td:first-child {
-            width: 200px;
+        /* --- TANDA TANGAN --- */
+        .ttd-table {
+            width: 100%;
+            margin-top: 200px;
         }
 
-        .isi-surat table td:nth-child(2) {
-            width: 20px;
+        .ttd-cell {
+            width: 60%; /* Kolom kosong sebelah kiri */
+        }
+
+        .sign-cell {
+            width: 40%;
             text-align: center;
         }
 
-        .ttd {
-            margin-top: 50px;
-            margin-left: 60%;
+        .space {
+            height: 100px; /* Tambahkan sedikit ruang tinggi */
+            position: relative;
+            width: 100%;
         }
 
-        .ttd .nama-ttd {
-            margin-top: 80px;
-            text-decoration: underline;
+        .signature-img {
+            /* 1. ATUR UKURAN DI SINI */
+            width: 150px;      /* Ubah lebar gambar sesuai keinginan */
+            height: auto;
+            
+            /* 2. ATUR POSISI */
+            position: absolute;
+            top: -10px;        /* Tarik ke atas agar sedikit menimpa teks jabatan */
+            left: 50%;         /* Geser ke tengah kontainer */
+            
+            /* 3. TEKNIK CENTER MANUAL UNTUK PDF */
+            /* Margin left harus bernilai NEGATIF SETENGAH dari Lebar Gambar (Width) */
+            /* Jika width 150px, maka margin-left harus -75px */
+            margin-left: -75px; 
+            
+            z-index: 10;
+        }
+
+        .nama-lurah {
             font-weight: bold;
-        }
-
-        .ttd .nip {
-            font-size: 10pt;
+            text-decoration: underline;
+            text-transform: uppercase;
         }
     </style>
 </head>
 <body>
-    {{-- KOP SURAT --}}
-    <div class="kop-surat">
-        <table>
+    <div class="container">
+        <table class="kop-table">
             <tr>
-                <td class="logo">
-                    <img src="{{ public_path('assets/logo/parepare.png') }}" alt="Logo">
+                <td class="logo-cell">
+                    <img src="{{ request()->is('preview-pdf-template*') ? asset('assets/logo/parepare.png') : public_path('assets/logo/parepare.png') }}" width="75">
                 </td>
-                <td class="text">
-                    <h3>Pemerintah Kota Parepare</h3>
-                    <h4>Kecamatan {{ strtoupper($kelurahan->kecamatan) }}</h4>
-                    <h4>Kelurahan {{ strtoupper($kelurahan->nama) }}</h4>
+                <td class="text-cell">
+                    <h3>PEMERINTAH KOTA PAREPARE</h3>
+                    <h4>KECAMATAN {{ strtoupper($kelurahan->kecamatan) }}</h4>
+                    <h4>KELURAHAN {{ strtoupper($kelurahan->nama) }}</h4>
                     <p>{{ $alamat_kelurahan }} Kota Parepare Kode Pos {{ $kelurahan->kode_pos }}</p>
                 </td>
             </tr>
         </table>
-    </div>
 
-    {{-- JUDUL SURAT --}}
-    <div class="judul-surat">
-        <h2>Surat Keterangan Domisili Usaha</h2>
-    </div>
+        <div class="judul-area">
+            <h2>SURAT KETERANGAN DOMISILI USAHA</h2>
+            <div>Nomor: {{ $nomor_surat }}</div>
+        </div>
 
-    {{-- NOMOR SURAT --}}
-    <div class="nomor-surat">
-        Nomor: {{ $nomor_surat }}
-    </div>
+        <div class="isi-text" style="text-indent: 45px;">
+            Yang bertanda tangan di bawah ini Lurah {{ $kelurahan->nama }}, Kecamatan {{ $kelurahan->kecamatan }}, Kota Parepare, dengan ini menerangkan bahwa:
+        </div>
 
-    {{-- ISI SURAT --}}
-    <div class="isi-surat">
-        <p style="text-indent: 50px;">
-            Yang bertanda tangan di bawah ini Lurah {{ $kelurahan->nama }}, Kecamatan {{ $kelurahan->kecamatan }}, 
-            Kota Parepare, dengan ini menerangkan bahwa:
-        </p>
-
-        <table>
+        <table class="data-table">
             <tr>
-                <td>Nama Perusahaan</td>
-                <td>:</td>
+                <td width="180">Nama Perusahaan</td>
+                <td width="10">:</td>
                 <td><strong>{{ $nama_perusahaan }}</strong></td>
             </tr>
             <tr>
@@ -172,22 +164,32 @@
             </tr>
         </table>
 
-        <p style="text-indent: 50px;">
-            Adalah benar berdomisili di wilayah Kelurahan {{ $kelurahan->nama }}, Kecamatan {{ $kelurahan->kecamatan }}, 
-            Kota Parepare, dan menjalankan usaha di alamat tersebut di atas.
-        </p>
+        <div class="isi-text" style="text-indent: 45px;">
+            Adalah benar berdomisili di wilayah Kelurahan {{ $kelurahan->nama }}, Kecamatan {{ $kelurahan->kecamatan }}, Kota Parepare, dan menjalankan usaha di alamat tersebut di atas.
+        </div>
 
-        <p style="text-indent: 50px;">
+        <div class="isi-text" style="text-indent: 45px;">
             Demikian surat keterangan ini dibuat dengan sebenarnya untuk dapat dipergunakan sebagaimana mestinya.
-        </p>
-    </div>
+        </div>
 
-    {{-- TANDA TANGAN --}}
-    <div class="ttd">
-        <p>Parepare, {{ $tanggal }}</p>
-        <p>LURAH {{ strtoupper($kelurahan->nama) }}</p>
-        <p class="nama-ttd">{{ $nama_lurah }}</p>
-        <p class="nip">NIP. {{ $nip_lurah }}</p>
+        <table class="ttd-table">
+            <tr>
+                <td class="ttd-cell"></td>
+                <td class="sign-cell">
+                    <div>Parepare, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</div>
+                    <div style="margin-bottom: 5px;">LURAH {{ strtoupper($kelurahan->nama) }}</div>
+                    
+                    <div class="space">
+                        @if(request()->is('preview-pdf-template*'))
+                            <img src="{{ asset('signatures/bahrul_signature.png') }}" class="signature-img">
+                        @endif
+                    </div>
+
+                    <div class="nama-lurah">{{ $nama_lurah }}</div>
+                    <div>NIP. {{ $nip_lurah ?? '-' }}</div>
+                </td>
+            </tr>
+        </table>
     </div>
 </body>
 </html>
