@@ -10,6 +10,8 @@ use App\Models\InformasiUmkm;
 use App\Models\Kriteria;
 use App\Models\JenisSuratSetting;
 use Carbon\Carbon;
+use App\Helpers\PdfSigner;
+use Illuminate\Support\Facades\Storage;
 
 class LurahController extends Controller
 {
@@ -123,26 +125,67 @@ class LurahController extends Controller
 
     // --- FITUR VERIFIKASI SURAT ---
     public function verifikasiSurat(Request $request, $id)
-    {
-        // Validasi input dari form
-        $request->validate([
-            'status' => 'required|in:diterima,ditolak'
-        ]);
+{
+    $request->validate([
+        'status' => 'required|in:diterima,ditolak'
+    ]);
 
-        $surat = Surat::findOrFail($id);
-        
-        // Update data surat
-        $surat->status_verifikasi = $request->status;
-        
-        // Opsional: Simpan data verifikator jika kolom tersedia di DB
-        // $surat->verificator_id = Auth::guard('pegawai')->id();
-        // $surat->tanggal_verifikasi = now();
-
-        $surat->save();
-
-        $pesan = $request->status == 'diterima' ? 'Surat berhasil disetujui.' : 'Surat telah ditolak.';
-        return back()->with('success', $pesan);
+    $surat = Surat::findOrFail($id);
+    $pegawai = Auth::guard('pegawai')->user();
+    
+    // Update status verifikasi
+    $surat->status_verifikasi = $request->status;
+    $surat->verified_by = $pegawai->id_pegawai;
+    $surat->verified_at = now();
+    
+    // Jika disetujui, tambahkan tanda tangan ke PDF
+    if ($request->status === 'diterima' && $surat->file_surat) {
+        try {
+            // Path ke PDF asli
+            $originalPdfPath = storage_path('app/public/' . $surat->file_surat);
+            
+            // Path ke gambar tanda tangan
+            $signaturePath = public_path('signatures/bahrul_signature.png');
+            
+            // Jika tidak ada gambar signature, gunakan path kosong (akan pakai teks)
+            if (!file_exists($signaturePath)) {
+                $signaturePath = '';
+            }
+            
+            // Tambahkan tanda tangan
+            $signedPdfPath = PdfSigner::addSignature(
+                $originalPdfPath,
+                $signaturePath,
+                $pegawai->nama,
+                $pegawai->nip ?? '-'
+            );
+            
+            // Backup PDF lama (opsional)
+            $backupPath = str_replace('.pdf', '_unsigned.pdf', $surat->file_surat);
+            Storage::copy('public/' . $surat->file_surat, 'public/' . $backupPath);
+            
+            // Replace PDF lama dengan yang sudah ditandatangani
+            Storage::put('public/' . $surat->file_surat, file_get_contents($signedPdfPath));
+            
+            // Hapus temporary file
+            if (file_exists($signedPdfPath)) {
+                unlink($signedPdfPath);
+            }
+            
+        } catch (\Exception $e) {
+            // Log error tapi tetap lanjutkan verifikasi
+            \Log::error('Failed to add signature: ' . $e->getMessage());
+        }
     }
+    
+    $surat->save();
+
+    $pesan = $request->status == 'diterima' 
+        ? 'Surat berhasil disetujui dan ditandatangani.' 
+        : 'Surat telah ditolak.';
+        
+    return back()->with('success', $pesan);
+}
 
     // --- PENGATURAN BOBOT ---
     public function pengaturanBobot()
